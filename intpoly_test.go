@@ -389,3 +389,67 @@ func TestIntPolyPowModZero(t *testing.T) {
 		t.Error(dumpIntPoly(&p))
 	}
 }
+
+// GenPow() should raise its given polynomial by its given power
+// reduced with the given function.
+func TestIntPolyGenPow(t *testing.T) {
+	terms := [][2]int64{{1, 0}, {1, 1}}
+	p := NewIntPoly(makeTerms(terms))
+
+	termsPow := [][2]int64{{1, 0}, {1, 1}, {1, 3}, {1, 4}}
+	pow := IntPoly{}
+	modFn := func(p *IntPoly) {
+		p.Mod(p, big.NewInt(3))
+	}
+	powAlias := pow.GenPow(p, big.NewInt(4), modFn)
+	if &pow != powAlias {
+		t.Errorf("%p %p", pow, powAlias)
+	}
+	if !hasTerms(&pow, termsPow) {
+		t.Error(dumpIntPoly(&pow))
+	}
+}
+
+// GenPow() should still work even with aliasing.
+func TestIntPolyGenPowAlias(t *testing.T) {
+	terms := [][2]int64{{1, 0}, {1, 1}}
+	p := NewIntPoly(makeTerms(terms))
+
+	termsPow := [][2]int64{{1, 0}, {1, 1}, {1, 2}, {1, 3}}
+	modFn := func(p *IntPoly) {
+		p.Mod(p, big.NewInt(2))
+	}
+	p.GenPow(p, big.NewInt(3), modFn)
+	if !hasTerms(p, termsPow) {
+		t.Error(dumpIntPoly(p))
+	}
+}
+
+// Raising a non-zero polynomial to the zeroth power should give the
+// constant polynomial 1 regardless of the mod function used.
+func TestIntPolyNonZeroGenPowZero(t *testing.T) {
+	terms := [][2]int64{{1, 0}, {1, 1}}
+	p := NewIntPoly(makeTerms(terms))
+
+	pow := IntPoly{}
+	modFn := func(p *IntPoly) {
+		p.MulMono(p, big.NewInt(0), big.NewInt(0))
+	}
+	pow.GenPow(p, big.NewInt(0), modFn)
+	if !hasTerms(&pow, [][2]int64{{1, 0}}) {
+		t.Error(dumpIntPoly(&pow))
+	}
+}
+
+// Raising the zero polynomial to the zeroth power should give the
+// the constant polynomial 1 regardless of the mod function used.
+func TestIntPolyZeroGenPowZero(t *testing.T) {
+	pow := IntPoly{}
+	modFn := func(p *IntPoly) {
+		p.MulMono(p, big.NewInt(0), big.NewInt(0))
+	}
+	pow.GenPow(&pow, big.NewInt(0), modFn)
+	if !hasTerms(&pow, [][2]int64{{1, 0}}) {
+		t.Error(dumpIntPoly(&pow))
+	}
+}

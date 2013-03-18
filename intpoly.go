@@ -193,25 +193,35 @@ func (p *IntPoly) Mul(q, r *IntPoly) *IntPoly {
 	return p
 }
 
+type ModFunction func(p *IntPoly)
+
 // Returns a copy of the identity polynomial.
 func newIntPolyIdentity() *IntPoly {
 	return NewIntPoly([][2]*big.Int{{big.NewInt(1), big.NewInt(0)}})
 }
 
-// Sets p to q raised to the kth power. k must be non-negative.
-func (p *IntPoly) Pow(q *IntPoly, k *big.Int) *IntPoly {
+// Sets p to q raised to the kth power reduced modulo the given
+// function. k must be non-negative.
+func (p *IntPoly) GenPow(q *IntPoly, k *big.Int, modFn ModFunction) *IntPoly {
 	if k.Sign() < 0 {
 		panic("negative power")
 	}
 	pow := newIntPolyIdentity()
 	for i := k.BitLen() - 1; i >= 0; i-- {
 		pow.Mul(pow, pow)
+		modFn(pow)
 		if k.Bit(i) != 0 {
 			pow.Mul(pow, q)
+			modFn(pow)
 		}
 	}
 	*p = *pow
 	return p
+}
+
+// Sets p to q raised to the kth power. k must be non-negative.
+func (p *IntPoly) Pow(q *IntPoly, k *big.Int) *IntPoly {
+	return p.GenPow(q, k, func(p *IntPoly) {})
 }
 
 // Sets p to q with its coefficients reduced modulo k.
