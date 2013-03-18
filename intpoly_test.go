@@ -248,3 +248,54 @@ func TestIntPolyMulAlias(t *testing.T) {
 		t.Error(dumpIntPoly(p))
 	}
 }
+
+// Pow() should raise its given polynomial by its given power.
+func TestIntPolyPow(t *testing.T) {
+	terms := [][2]int64{{1, 0}, {1, 1}}
+	p := NewIntPoly(makeTerms(terms))
+
+	termsPow := [][2]int64{{1, 0}, {4, 1}, {6, 2}, {4, 3}, {1, 4}}
+	pow := IntPoly{}
+	powAlias := pow.Pow(p, big.NewInt(4))
+	if &pow != powAlias {
+		t.Errorf("%p %p", pow, powAlias)
+	}
+	if !hasTerms(&pow, termsPow) {
+		t.Error(dumpIntPoly(&pow))
+	}
+}
+
+// Pow() should still work even with aliasing.
+func TestIntPolyPowAlias(t *testing.T) {
+	terms := [][2]int64{{1, 0}, {1, 1}}
+	p := NewIntPoly(makeTerms(terms))
+
+	termsPow := [][2]int64{{1, 0}, {3, 1}, {3, 2}, {1, 3}}
+	p.Pow(p, big.NewInt(3))
+	if !hasTerms(p, termsPow) {
+		t.Error(dumpIntPoly(p))
+	}
+}
+
+// Raising a non-zero polynomial to the zeroth power should give the
+// constant polynomial 1.
+func TestIntPolyNonZeroPowZero(t *testing.T) {
+	terms := [][2]int64{{1, 0}, {1, 1}}
+	p := NewIntPoly(makeTerms(terms))
+
+	pow := IntPoly{}
+	pow.Pow(p, big.NewInt(0))
+	if !hasTerms(&pow, [][2]int64{{1, 0}}) {
+		t.Error(dumpIntPoly(&pow))
+	}
+}
+
+// Raising the zero polynomial to the zeroth power should give the
+// the constant polynomial 1.
+func TestIntPolyZeroPowZero(t *testing.T) {
+	pow := IntPoly{}
+	pow.Pow(&pow, big.NewInt(0))
+	if !hasTerms(&pow, [][2]int64{{1, 0}}) {
+		t.Error(dumpIntPoly(&pow))
+	}
+}

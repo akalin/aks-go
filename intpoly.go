@@ -171,3 +171,27 @@ func (p *IntPoly) Mul(q, r *IntPoly) *IntPoly {
 	*p = prod
 	return p
 }
+
+// Returns a copy of the identity polynomial.
+func newIntPolyIdentity() *IntPoly {
+	return NewIntPoly([][2]*big.Int{{big.NewInt(1), big.NewInt(0)}})
+}
+
+// Sets p to q raised to the kth power. k must be non-negative.
+func (p *IntPoly) Pow(q *IntPoly, k *big.Int) *IntPoly {
+	if k.Sign() < 0 {
+		panic("negative power")
+	}
+	pow := IntPoly{}
+	if k.Sign() == 0 {
+		pow = *newIntPolyIdentity()
+	} else {
+		pow.Set(q)
+		// TODO(akalin): Implement repeated squaring.
+		for i := big.NewInt(1); i.Cmp(k) < 0; i.Add(i, big.NewInt(1)) {
+			pow.Mul(&pow, q)
+		}
+	}
+	*p = pow
+	return p
+}
