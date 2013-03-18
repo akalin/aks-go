@@ -156,3 +156,18 @@ func (p *IntPoly) MulMono(q *IntPoly, coeff, deg *big.Int) *IntPoly {
 	p.terms = terms
 	return p
 }
+
+// Sets p to the product of q and r.
+func (p *IntPoly) Mul(q, r *IntPoly) *IntPoly {
+	if len(r.terms) > len(q.terms) {
+		q, r = r, q
+	}
+	prod := IntPoly{}
+	for _, term := range r.terms {
+		t := IntPoly{}
+		t.MulMono(q, &term.coeff, &term.deg)
+		prod.Add(&prod, &t)
+	}
+	*p = prod
+	return p
+}

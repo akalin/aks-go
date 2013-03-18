@@ -205,3 +205,46 @@ func TestIntPolyMulMonoAlias(t *testing.T) {
 		t.Error(dumpIntPoly(p))
 	}
 }
+
+// Mul() should multiply its given polynomials.
+func TestIntPolyMul(t *testing.T) {
+	terms1 := [][2]int64{{1, 1}, {-2, 3}, {3, 5}}
+	terms2 := [][2]int64{{-2, 2}, {3, 4}}
+	p := NewIntPoly(makeTerms(terms1))
+	q := NewIntPoly(makeTerms(terms2))
+
+	termsProd := [][2]int64{{-2, 3}, {7, 5}, {-12, 7}, {9, 9}}
+	prod := IntPoly{}
+	prodAlias := prod.Mul(p, q)
+	if &prod != prodAlias {
+		t.Errorf("%p %p", prod, prodAlias)
+	}
+	if !hasTerms(&prod, termsProd) {
+		t.Error(dumpIntPoly(&prod))
+	}
+}
+
+// Multiplication by the zero polynomial should result in the zero
+// polynomial.
+func TestIntPolyMulZero(t *testing.T) {
+	terms := [][2]int64{{1, 1}, {-2, 3}}
+	p := NewIntPoly(makeTerms(terms))
+	prod := IntPoly{}
+	prod.Mul(p, &IntPoly{})
+	if !isZero(&prod) {
+		t.Error(dumpIntPoly(&prod))
+	}
+}
+
+// Mul() should still work even with aliasing.
+func TestIntPolyMulAlias(t *testing.T) {
+	terms := [][2]int64{{1, 1}, {-2, 3}}
+	p := NewIntPoly(makeTerms(terms))
+
+	termsProd := [][2]int64{{1, 2}, {-4, 4}, {4, 6}}
+	p.Mul(p, p)
+
+	if !hasTerms(p, termsProd) {
+		t.Error(dumpIntPoly(p))
+	}
+}
