@@ -145,3 +145,30 @@ func TestIntPolySetSelf(t *testing.T) {
 		t.Error(dumpIntPoly(p))
 	}
 }
+
+// Add() should add its given polynomials term by term.
+func TestIntPolyAdd(t *testing.T) {
+	terms1 := [][2]int64{{1, 1}, {-2, 4}, {3, 6}}
+	terms2 := [][2]int64{{2, 5}, {3, 6}, {-3, 7}}
+	termsSum := [][2]int64{{1, 1}, {-2, 4}, {2, 5}, {6, 6}, {-3, 7}}
+	p1 := NewIntPoly(makeTerms(terms1))
+	p2 := NewIntPoly(makeTerms(terms2))
+	sum := IntPoly{}
+	sumAlias := sum.Add(p1, p2)
+	if &sum != sumAlias {
+		t.Errorf("%p %p", sum, sumAlias)
+	}
+	if !hasTerms(&sum, termsSum) {
+		t.Error(dumpIntPoly(&sum))
+	}
+}
+
+// Add() should still work even with aliasing.
+func TestIntPolyAddAlias(t *testing.T) {
+	terms := [][2]int64{{1, 1}, {-2, 4}, {3, 6}}
+	p := NewIntPoly(makeTerms(terms))
+	p.Add(p, p)
+	if !hasTerms(p, [][2]int64{{2, 1}, {-4, 4}, {6, 6}}) {
+		t.Error(dumpIntPoly(p))
+	}
+}

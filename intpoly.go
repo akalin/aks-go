@@ -89,3 +89,45 @@ func (p *IntPoly) Set(q *IntPoly) *IntPoly {
 	}
 	return p
 }
+
+// Sets p to the sum of q and r.
+func (p *IntPoly) Add(q, r *IntPoly) *IntPoly {
+	// Since we go left to right, reusing p's term array is okay
+	// even if p aliases q or r (or both).
+	terms := p.terms.make(len(q.terms) + len(r.terms))
+
+	i, j, k := 0, 0, 0
+	for ; j < len(q.terms) && k < len(r.terms); i++ {
+		term := &terms[i]
+		qTerm := &q.terms[j]
+		rTerm := &r.terms[k]
+		cmp := qTerm.deg.Cmp(&rTerm.deg)
+		if cmp < 0 {
+			term.Set(qTerm)
+			j++
+		} else if cmp > 0 {
+			term.Set(rTerm)
+			k++
+		} else {
+			term.coeff.Add(&qTerm.coeff, &rTerm.coeff)
+			term.deg.Set(&qTerm.deg)
+			j++
+			k++
+		}
+	}
+
+	if j < len(q.terms) {
+		for ; j < len(q.terms); j++ {
+			terms[i].Set(&q.terms[j])
+			i++
+		}
+	} else if k < len(r.terms) {
+		for ; k < len(r.terms); k++ {
+			terms[i].Set(&r.terms[k])
+			i++
+		}
+	}
+
+	p.terms = terms[0:i]
+	return p
+}
