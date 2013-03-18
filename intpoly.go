@@ -20,6 +20,12 @@ func (m *intMono) Set(n *intMono) {
 	m.deg.Set(&n.deg)
 }
 
+// Sets m to the product of n and coeff*X^deg.
+func (m *intMono) Mul(n *intMono, coeff, deg *big.Int) {
+	m.coeff.Mul(&n.coeff, coeff)
+	m.deg.Add(&n.deg, deg)
+}
+
 // The container for a polynomial's terms.
 type termList []intMono
 
@@ -129,5 +135,24 @@ func (p *IntPoly) Add(q, r *IntPoly) *IntPoly {
 	}
 
 	p.terms = terms[0:i]
+	return p
+}
+
+// Sets p to the product of q and coeff*X^deg. coeff must not be zero
+// and deg must not be negative.
+func (p *IntPoly) MulMono(q *IntPoly, coeff, deg *big.Int) *IntPoly {
+	if coeff.Sign() == 0 {
+		panic("zero coefficient")
+	}
+	if deg.Sign() < 0 {
+		panic("negative degree")
+	}
+	// Since we go left to right, reusing p's term array is okay
+	// even if p aliases q.
+	terms := p.terms.make(len(q.terms))
+	for i, _ := range terms {
+		terms[i].Mul(&q.terms[i], coeff, deg)
+	}
+	p.terms = terms
 	return p
 }

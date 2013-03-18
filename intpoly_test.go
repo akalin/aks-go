@@ -172,3 +172,36 @@ func TestIntPolyAddAlias(t *testing.T) {
 		t.Error(dumpIntPoly(p))
 	}
 }
+
+// MulMono() should multiply its given polynomial by its given
+// monomial.
+func TestIntPolyMulMono(t *testing.T) {
+	terms := [][2]int64{{1, 1}, {-2, 4}, {3, 6}}
+	p := NewIntPoly(makeTerms(terms))
+	coeff := big.NewInt(5)
+	deg := big.NewInt(3)
+
+	termsProd := [][2]int64{{5, 4}, {-10, 7}, {15, 9}}
+	prod := IntPoly{}
+	prodAlias := prod.MulMono(p, coeff, deg)
+	if &prod != prodAlias {
+		t.Errorf("%p %p", prod, prodAlias)
+	}
+	if !hasTerms(&prod, termsProd) {
+		t.Error(dumpIntPoly(&prod))
+	}
+}
+
+// MulMono() should still work even with aliasing.
+func TestIntPolyMulMonoAlias(t *testing.T) {
+	terms := [][2]int64{{1, 1}, {-2, 4}, {3, 6}}
+	p := NewIntPoly(makeTerms(terms))
+	coeff := big.NewInt(5)
+	deg := big.NewInt(3)
+
+	termsProd := [][2]int64{{5, 4}, {-10, 7}, {15, 9}}
+	p.MulMono(p, coeff, deg)
+	if !hasTerms(p, termsProd) {
+		t.Error(dumpIntPoly(p))
+	}
+}
