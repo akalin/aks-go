@@ -182,16 +182,13 @@ func (p *IntPoly) Pow(q *IntPoly, k *big.Int) *IntPoly {
 	if k.Sign() < 0 {
 		panic("negative power")
 	}
-	pow := IntPoly{}
-	if k.Sign() == 0 {
-		pow = *newIntPolyIdentity()
-	} else {
-		pow.Set(q)
-		// TODO(akalin): Implement repeated squaring.
-		for i := big.NewInt(1); i.Cmp(k) < 0; i.Add(i, big.NewInt(1)) {
-			pow.Mul(&pow, q)
+	pow := newIntPolyIdentity()
+	for i := k.BitLen() - 1; i >= 0; i-- {
+		pow.Mul(pow, pow)
+		if k.Bit(i) != 0 {
+			pow.Mul(pow, q)
 		}
 	}
-	*p = pow
+	*p = *pow
 	return p
 }
