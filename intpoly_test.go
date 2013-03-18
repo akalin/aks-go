@@ -64,3 +64,58 @@ func TestNewIntPolyBasic(t *testing.T) {
 		t.Error(dumpIntPoly(p))
 	}
 }
+
+// Eq() should return true iff its given polynomials have the same
+// terms.
+func TestIntPolyEq(t *testing.T) {
+	terms1 := [][2]int64{{1, 1}, {-2, 4}, {3, 6}, {-7, 9}}
+	terms2 := [][2]int64{{2, 1}, {-2, 4}, {3, 6}, {-7, 9}}
+	p1 := NewIntPoly(makeTerms(terms1))
+	p2 := NewIntPoly(makeTerms(terms2))
+	p3 := NewIntPoly(makeTerms(terms2[0:3]))
+
+	// Reflexivity.
+	if !p1.Eq(p1) {
+		t.Error(dumpIntPoly(p1))
+	}
+	if !p2.Eq(p2) {
+		t.Error(dumpIntPoly(p2))
+	}
+	if !p3.Eq(p3) {
+		t.Error(dumpIntPoly(p3))
+	}
+
+	// Symmetry.
+	if p1.Eq(p2) != p2.Eq(p1) {
+		t.Error(dumpIntPoly(p1), dumpIntPoly(p2))
+	}
+	if p1.Eq(p3) != p3.Eq(p1) {
+		t.Error(dumpIntPoly(p1), dumpIntPoly(p3))
+	}
+	if p2.Eq(p3) != p3.Eq(p2) {
+		t.Error(dumpIntPoly(p2), dumpIntPoly(p3))
+	}
+
+	// Transitivity.
+	p4 := NewIntPoly(makeTerms(terms1))
+	p5 := NewIntPoly(makeTerms(terms1))
+	if !p1.Eq(p4) {
+		t.Error(dumpIntPoly(p1), dumpIntPoly(p4))
+	}
+	if !p4.Eq(p5) {
+		t.Error(dumpIntPoly(p4), dumpIntPoly(p5))
+	}
+	if !p1.Eq(p5) {
+		t.Error(dumpIntPoly(p1), dumpIntPoly(p5))
+	}
+
+	// p1 and p2 don't have the same coefficient.
+	if p1.Eq(p2) {
+		t.Error(dumpIntPoly(p1), dumpIntPoly(p2))
+	}
+
+	// p1 and p3 don't have the same degree.
+	if p1.Eq(p3) {
+		t.Error(dumpIntPoly(p1), dumpIntPoly(p3))
+	}
+}
