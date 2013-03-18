@@ -299,3 +299,55 @@ func TestIntPolyZeroPowZero(t *testing.T) {
 		t.Error(dumpIntPoly(&pow))
 	}
 }
+
+// Mod() should reduce the coefficients of its given polynomial by its
+// given modulus.
+func TestIntPolyMod(t *testing.T) {
+	terms := [][2]int64{{100, 1}, {-200, 3}, {300, 5}}
+	p := NewIntPoly(makeTerms(terms))
+
+	termsMod := [][2]int64{{1, 1}, {1, 3}}
+	mod := IntPoly{}
+	modAlias := mod.Mod(p, big.NewInt(3))
+	if &mod != modAlias {
+		t.Errorf("%p %p", mod, modAlias)
+	}
+	if !hasTerms(&mod, termsMod) {
+		t.Error(dumpIntPoly(&mod))
+	}
+}
+
+// Mod() should still work even with aliasing.
+func TestIntPolyModAlias(t *testing.T) {
+	terms := [][2]int64{{100, 1}, {-200, 3}, {300, 5}}
+	p := NewIntPoly(makeTerms(terms))
+
+	termsMod := [][2]int64{{1, 1}, {1, 3}}
+	p.Mod(p, big.NewInt(3))
+	if !hasTerms(p, termsMod) {
+		t.Error(dumpIntPoly(p))
+	}
+}
+
+// Mod() should still work even in the presence of zero coefficients.
+func TestIntPolyModZeroCoefficients(t *testing.T) {
+	terms := [][2]int64{{99, 1}, {-201, 3}, {300, 5}}
+	p := NewIntPoly(makeTerms(terms))
+
+	p.Mod(p, big.NewInt(3))
+	if !isZero(p) {
+		t.Error(dumpIntPoly(p))
+	}
+}
+
+// Mod() should work even with negative moduli.
+func TestIntPolyModNegative(t *testing.T) {
+	terms := [][2]int64{{100, 1}, {-200, 3}, {300, 5}}
+	p := NewIntPoly(makeTerms(terms))
+
+	termsMod := [][2]int64{{1, 1}, {1, 3}}
+	p.Mod(p, big.NewInt(-3))
+	if !hasTerms(p, termsMod) {
+		t.Error(dumpIntPoly(p))
+	}
+}

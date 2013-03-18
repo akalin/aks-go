@@ -26,6 +26,15 @@ func (m *intMono) Mul(n *intMono, coeff, deg *big.Int) {
 	m.deg.Add(&n.deg, deg)
 }
 
+// Sets m to n with its coefficient reduced modulo k. If that ends up
+// setting the coefficient to zero, then m becomes the zero monomial.
+func (m *intMono) Mod(n *intMono, k *big.Int) {
+	m.coeff.Mod(&n.coeff, k)
+	if m.coeff.Sign() != 0 {
+		m.deg.Set(&n.deg)
+	}
+}
+
 // The container for a polynomial's terms.
 type termList []intMono
 
@@ -190,5 +199,26 @@ func (p *IntPoly) Pow(q *IntPoly, k *big.Int) *IntPoly {
 		}
 	}
 	*p = *pow
+	return p
+}
+
+// Sets p to q with its coefficients reduced modulo k.
+func (p *IntPoly) Mod(q *IntPoly, k *big.Int) *IntPoly {
+	if k.Sign() == 0 {
+		panic("zero modulus")
+	}
+	// Since we go left to right, reusing p's term array is okay
+	// even if p aliases q.
+	terms := p.terms.make(len(q.terms))
+	i := 0
+	for j, _ := range terms {
+		term := intMono{}
+		term.Mod(&q.terms[j], k)
+		if term.coeff.Sign() != 0 {
+			terms[i] = term
+			i++
+		}
+	}
+	p.terms = terms[0:i]
 	return p
 }
