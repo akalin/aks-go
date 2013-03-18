@@ -119,3 +119,29 @@ func TestIntPolyEq(t *testing.T) {
 		t.Error(dumpIntPoly(p1), dumpIntPoly(p3))
 	}
 }
+
+// Set() should make a deep copy.
+func TestIntPolySetDeepCopy(t *testing.T) {
+	terms := [][2]int64{{1, 1}, {-2, 4}, {3, 6}, {-7, 9}}
+	p1 := NewIntPoly(makeTerms(terms))
+	p2 := IntPoly{}
+	p2Alias := p2.Set(p1)
+	if &p2 != p2Alias {
+		t.Errorf("%p %p", p2, p2Alias)
+	}
+	// This shouldn't affect the values in p2.
+	p1.terms[0].coeff.SetInt64(2)
+	if !hasTerms(&p2, terms) {
+		t.Error(dumpIntPoly(&p2))
+	}
+}
+
+// Setting a polynomial to itself should have no effect.
+func TestIntPolySetSelf(t *testing.T) {
+	terms := [][2]int64{{1, 1}, {-2, 4}, {3, 6}, {-7, 9}}
+	p := NewIntPoly(makeTerms(terms))
+	p.Set(p)
+	if !hasTerms(p, terms) {
+		t.Error(dumpIntPoly(p))
+	}
+}
