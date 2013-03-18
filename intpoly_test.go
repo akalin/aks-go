@@ -351,3 +351,41 @@ func TestIntPolyModNegative(t *testing.T) {
 		t.Error(dumpIntPoly(p))
 	}
 }
+
+// PowMod() should reduce the powers of its given polynomial by its
+// given modulus.
+func TestIntPolyPowMod(t *testing.T) {
+	terms := [][2]int64{{1, 1}, {2, 2}, {1, 5}, {3, 6}, {1, 9}}
+	p := NewIntPoly(makeTerms(terms))
+
+	termsPowMod := [][2]int64{{3, 1}, {5, 2}}
+	powMod := IntPoly{}
+	powModAlias := powMod.PowMod(p, big.NewInt(4))
+	if &powMod != powModAlias {
+		t.Errorf("%p %p", powMod, powModAlias)
+	}
+	if !hasTerms(&powMod, termsPowMod) {
+		t.Error(dumpIntPoly(&powMod))
+	}
+}
+
+// PowMod() should still work even in the presence of zero coefficients.
+func TestIntPolyPowModAlias(t *testing.T) {
+	terms := [][2]int64{{1, 1}, {1, 5}, {1, 9}}
+	p := NewIntPoly(makeTerms(terms))
+
+	termsPowMod := [][2]int64{{3, 1}}
+	p.PowMod(p, big.NewInt(4))
+	if !hasTerms(p, termsPowMod) {
+		t.Error(dumpIntPoly(p))
+	}
+}
+
+// PowMod() with a zero polynomial should return the zero polynomial.
+func TestIntPolyPowModZero(t *testing.T) {
+	p := IntPoly{}
+	p.PowMod(&p, big.NewInt(4))
+	if !isZero(&p) {
+		t.Error(dumpIntPoly(&p))
+	}
+}

@@ -1,6 +1,7 @@
 package main
 
 import "math/big"
+import "sort"
 
 // An intMono represents the monomial coeff*X^deg.
 // The zero value for an intMono represents the zero monomial.
@@ -35,8 +36,19 @@ func (m *intMono) Mod(n *intMono, k *big.Int) {
 	}
 }
 
+// Sets m to n with its power (degree) reduced modulo k.
+func (m *intMono) ModPow(n *intMono, k *big.Int) {
+	m.coeff.Set(&n.coeff)
+	m.deg.Mod(&n.deg, k)
+}
+
 // The container for a polynomial's terms.
 type termList []intMono
+
+// sort.Interface implementation (by degree).
+func (l termList) Len() int           { return len(l) }
+func (l termList) Less(i, j int) bool { return l[i].deg.Cmp(&l[j].deg) < 0 }
+func (l termList) Swap(i, j int)      { l[i], l[j] = l[j], l[i] }
 
 // Returns a termList of the given size, possibly reusing term's
 // space.
@@ -220,5 +232,37 @@ func (p *IntPoly) Mod(q *IntPoly, k *big.Int) *IntPoly {
 		}
 	}
 	p.terms = terms[0:i]
+	return p
+}
+
+// Sets p to q with its powers reduced modulo k.
+func (p *IntPoly) PowMod(q *IntPoly, k *big.Int) *IntPoly {
+	if k.Sign() == 0 {
+		panic("zero modulus")
+	}
+	// Since we go left to right, reusing p's term array is okay
+	// even if p aliases q.
+	terms := p.terms.make(len(q.terms))
+	if len(terms) == 0 {
+		p.terms = terms
+		return p
+	}
+
+	for i, _ := range terms {
+		terms[i].ModPow(&q.terms[i], k)
+	}
+	sort.Sort(terms)
+
+	// Coalesce adjacent terms with the same power.
+	i := 0
+	for j := 1; j < len(terms); j++ {
+		if terms[j].deg.Cmp(&terms[i].deg) == 0 {
+			terms[i].coeff.Add(&terms[i].coeff, &terms[j].coeff)
+		} else {
+			i++
+			terms[i] = terms[j]
+		}
+	}
+	p.terms = terms[0 : i+1]
 	return p
 }
