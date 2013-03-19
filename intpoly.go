@@ -1,5 +1,6 @@
 package main
 
+import "fmt"
 import "math/big"
 import "sort"
 
@@ -40,6 +41,48 @@ func (m *intMono) Mod(n *intMono, k *big.Int) {
 func (m *intMono) ModPow(n *intMono, k *big.Int) {
 	m.coeff.Set(&n.coeff)
 	m.deg.Mod(&n.deg, k)
+}
+
+// Format m's coefficient (except for the sign).
+func (m *intMono) formatCoeffAbs(f fmt.State, c rune) {
+	a := big.Int{}
+	a.Abs(&m.coeff)
+	if (a.Cmp(big.NewInt(1)) != 0) || m.deg.Sign() == 0 {
+		fmt.Fprint(f, &a)
+	}
+}
+
+// Format m's monomial (the x^deg part).
+func (m *intMono) FormatMono(f fmt.State, c rune) {
+	if m.deg.Sign() != 0 {
+		fmt.Fprint(f, "x")
+		if m.deg.Cmp(big.NewInt(1)) > 0 {
+			fmt.Fprint(f, "^", &m.deg)
+		}
+	}
+}
+
+// Format m as a leading term.
+func (m *intMono) FormatLeading(f fmt.State, c rune) {
+	if m.coeff.Sign() < 0 {
+		fmt.Fprint(f, "-")
+	}
+	m.formatCoeffAbs(f, c)
+	m.FormatMono(f, c)
+}
+
+// Format m as a non-leading term.
+func (m *intMono) FormatNonLeading(f fmt.State, c rune) {
+	if m.coeff.Sign() == 0 {
+		return
+	}
+	if m.coeff.Sign() > 0 {
+		fmt.Fprint(f, " + ")
+	} else {
+		fmt.Fprint(f, " - ")
+	}
+	m.formatCoeffAbs(f, c)
+	m.FormatMono(f, c)
 }
 
 // The container for a polynomial's terms.
@@ -275,4 +318,16 @@ func (p *IntPoly) PowMod(q *IntPoly, k *big.Int) *IntPoly {
 	}
 	p.terms = terms[0 : i+1]
 	return p
+}
+
+// fmt.Formatter implementation.
+func (p *IntPoly) Format(f fmt.State, c rune) {
+	if len(p.terms) == 0 {
+		fmt.Fprint(f, "0")
+		return
+	}
+	p.terms[len(p.terms)-1].FormatLeading(f, c)
+	for i := len(p.terms) - 2; i >= 0; i-- {
+		p.terms[i].FormatNonLeading(f, c)
+	}
 }

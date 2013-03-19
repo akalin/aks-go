@@ -453,3 +453,53 @@ func TestIntPolyZeroGenPowZero(t *testing.T) {
 		t.Error(dumpIntPoly(&pow))
 	}
 }
+
+// Make sure that polynomials get converted to strings in standard
+// notation.
+func TestIntPolyFormat(t *testing.T) {
+	terms := [][2]int64{{-5, 0}, {2, 1}, {1, 2}, {-2, 3}, {-1, 4}}
+
+	expectedStrs := []string{
+		"0",
+		"-5",
+		"2x - 5",
+		"x^2 + 2x - 5",
+		"-2x^3 + x^2 + 2x - 5",
+		"-x^4 - 2x^3 + x^2 + 2x - 5",
+	}
+
+	for i, expectedStr := range expectedStrs {
+		p := NewIntPoly(makeTerms(terms[0:i]))
+		str := fmt.Sprint(p)
+		if str != expectedStr {
+			t.Error(i, dumpIntPoly(p), str)
+		}
+	}
+}
+
+// Make sure that constant coefficients are handled correctly.
+func TestIntPolyFormatConstantCoefficient(t *testing.T) {
+	p := NewIntPoly(makeTerms([][2]int64{{1, 0}}))
+	str := fmt.Sprint(p)
+	if str != "1" {
+		t.Error(dumpIntPoly(p), str)
+	}
+
+	p = NewIntPoly(makeTerms([][2]int64{{-1, 0}}))
+	str = fmt.Sprint(p)
+	if str != "-1" {
+		t.Error(dumpIntPoly(p), str)
+	}
+
+	p = NewIntPoly(makeTerms([][2]int64{{1, 0}, {1, 1}}))
+	str = fmt.Sprint(p)
+	if str != "x + 1" {
+		t.Error(dumpIntPoly(p), str)
+	}
+
+	p = NewIntPoly(makeTerms([][2]int64{{-1, 0}, {1, 1}}))
+	str = fmt.Sprint(p)
+	if str != "x - 1" {
+		t.Error(dumpIntPoly(p), str)
+	}
+}
