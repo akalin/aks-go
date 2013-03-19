@@ -2,6 +2,7 @@ package main
 
 import "fmt"
 import "math/big"
+import "os"
 import "runtime"
 
 // Returns whether (X + a)^n = X^n + a mod (n, X^r - 1).
@@ -102,11 +103,27 @@ func main() {
 	numCPU := runtime.NumCPU()
 	runtime.GOMAXPROCS(numCPU)
 
-	n := big.NewInt(46633)
-	r := big.NewInt(262)
-	M := big.NewInt(257)
-	fmt.Printf("n = %v, r = %v, M = %v\n", n, r, M)
-	a := getAKSWitness(n, r, M, numCPU)
+	if len(os.Args) < 2 {
+		fmt.Fprintf(os.Stderr, "%s [number]\n", os.Args[0])
+		os.Exit(-1)
+	}
+
+	var n big.Int
+	_, parsed := n.SetString(os.Args[1], 10)
+	if !parsed {
+		fmt.Fprintf(os.Stderr, "could not parse %s\n", os.Args[1])
+		os.Exit(-1)
+	}
+	if n.Cmp(big.NewInt(2)) < 0 {
+		fmt.Fprintf(os.Stderr, "n must be >= 2\n")
+		os.Exit(-1)
+	}
+
+	// TODO(akalin): Calculate AKS parameters properly.
+	r := n
+	M := n
+	fmt.Printf("n = %v, r = %v, M = %v\n", &n, &r, &M)
+	a := getAKSWitness(&n, &r, &M, numCPU)
 	if a != nil {
 		fmt.Printf("n is composite with AKS witness %v\n", a)
 	} else {
