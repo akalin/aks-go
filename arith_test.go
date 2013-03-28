@@ -16,6 +16,7 @@ func makeFactors(int64Factors [][2]int64) [][2]*big.Int {
 // Returns a FactorFunction which compares its given factors to each
 // successive element in the given list of factors.
 func makeExpectingFactorFunction(
+	n int64,
 	int64Factors [][2]int64,
 	comparedFactors *int,
 	t *testing.T) FactorFunction {
@@ -23,17 +24,17 @@ func makeExpectingFactorFunction(
 	*comparedFactors = 0
 	return func(p, m *big.Int) bool {
 		if *comparedFactors >= len(expectedFactors) {
-			t.Error(len(expectedFactors))
+			t.Error(n, len(expectedFactors))
 			return false
 		}
 		expectedP := expectedFactors[*comparedFactors][0]
 		if p.Cmp(expectedP) != 0 {
-			t.Error(p, expectedP)
+			t.Error(n, p, expectedP)
 			return false
 		}
 		expectedM := expectedFactors[*comparedFactors][1]
 		if m.Cmp(expectedM) != 0 {
-			t.Error(m, expectedM)
+			t.Error(n, m, expectedM)
 			return false
 		}
 		*comparedFactors++
@@ -48,9 +49,9 @@ func testTrialDivide(n int64, expectedFactors [][2]int64, t *testing.T) {
 	TrialDivide(
 		big.NewInt(n),
 		makeExpectingFactorFunction(
-			expectedFactors, &comparedFactors, t))
+			n, expectedFactors, &comparedFactors, t))
 	if comparedFactors != len(expectedFactors) {
-		t.Error(comparedFactors, len(expectedFactors))
+		t.Error(n, comparedFactors, len(expectedFactors))
 	}
 }
 
@@ -79,18 +80,19 @@ func TestTrialDivideLarge(t *testing.T) {
 // Make sure TrialDivide respects the return value of its
 // FactorFunction.
 func TestTrialDividePartial(t *testing.T) {
+	var n int64 = 100
 	expectedFactors := [][2]int64{{2, 2}}
 	comparedFactors := 0
 	expectingFactorFunction :=
 		makeExpectingFactorFunction(
-			expectedFactors, &comparedFactors, t)
+			n, expectedFactors, &comparedFactors, t)
 	partialFactorFunction := func(p, m *big.Int) bool {
 		if comparedFactors >= 1 {
 			return false
 		}
 		return expectingFactorFunction(p, m)
 	}
-	TrialDivide(big.NewInt(100), partialFactorFunction)
+	TrialDivide(big.NewInt(n), partialFactorFunction)
 	if comparedFactors != len(expectedFactors) {
 		t.Error(comparedFactors, len(expectedFactors))
 	}

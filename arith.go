@@ -11,6 +11,8 @@ type FactorFunction func(p, m *big.Int) bool
 func TrialDivide(n *big.Int, factorFn FactorFunction) {
 	one := big.NewInt(1)
 	two := big.NewInt(2)
+	three := big.NewInt(3)
+	four := big.NewInt(4)
 
 	if n.Sign() < 0 {
 		panic("negative n")
@@ -18,15 +20,12 @@ func TrialDivide(n *big.Int, factorFn FactorFunction) {
 	if n.Sign() == 0 {
 		return
 	}
+
 	t := &big.Int{}
 	t.Set(n)
-	// TODO(akalin): Use a wheel.
-	for d := two; ; d.Add(d, one) {
-		var dSq big.Int
-		dSq.Mul(d, d)
-		if dSq.Cmp(n) > 0 {
-			break
-		}
+	// Factors out d from t as much as possible and calls factorFn
+	// if d divides t.
+	factorOut := func(d *big.Int) bool {
 		var m big.Int
 		for {
 			var q, r big.Int
@@ -39,8 +38,25 @@ func TrialDivide(n *big.Int, factorFn FactorFunction) {
 		}
 		if m.Sign() != 0 {
 			if !factorFn(d, &m) {
-				return
+				return false
 			}
+		}
+		return true
+	}
+
+	if four.Cmp(n) <= 0 && !factorOut(two) {
+		return
+	}
+
+	// TODO(akalin): Use a mod-30 wheel.
+	for d := three; ; d.Add(d, two) {
+		var dSq big.Int
+		dSq.Mul(d, d)
+		if dSq.Cmp(n) > 0 {
+			break
+		}
+		if !factorOut(d) {
+			return
 		}
 	}
 	if t.Cmp(one) != 0 {
