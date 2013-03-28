@@ -13,6 +13,13 @@ func TrialDivide(n *big.Int, factorFn FactorFunction) {
 	two := big.NewInt(2)
 	three := big.NewInt(3)
 	four := big.NewInt(4)
+	five := big.NewInt(5)
+	six := big.NewInt(6)
+	seven := big.NewInt(7)
+	nine := big.NewInt(9)
+	eleven := big.NewInt(11)
+	twentyFive := big.NewInt(25)
+	fortyNine := big.NewInt(49)
 
 	if n.Sign() < 0 {
 		panic("negative n")
@@ -44,12 +51,30 @@ func TrialDivide(n *big.Int, factorFn FactorFunction) {
 		return true
 	}
 
+	// TODO(akalin): Compute floor(sqrt(n)) once and compare d to
+	// that instead of squaring d and comparing that to n.
+
+	// Try small primes first.
 	if four.Cmp(n) <= 0 && !factorOut(two) {
 		return
 	}
 
-	// TODO(akalin): Use a mod-30 wheel.
-	for d := three; d.Cmp(t) <= 0; d.Add(d, two) {
+	if three.Cmp(t) <= 0 && nine.Cmp(n) <= 0 && !factorOut(three) {
+		return
+	}
+
+	if five.Cmp(t) <= 0 && twentyFive.Cmp(n) <= 0 && !factorOut(five) {
+		return
+	}
+
+	if seven.Cmp(t) <= 0 && fortyNine.Cmp(n) <= 0 && !factorOut(seven) {
+		return
+	}
+
+	// Then run through a mod-30 wheel, which cuts the number of
+	// odd numbers to test roughly in half.
+	mod30Wheel := []*big.Int{four, two, four, two, four, six, two, six}
+	for i, d := 1, eleven; d.Cmp(t) <= 0; {
 		var dSq big.Int
 		dSq.Mul(d, d)
 		if dSq.Cmp(n) > 0 {
@@ -58,6 +83,8 @@ func TrialDivide(n *big.Int, factorFn FactorFunction) {
 		if !factorOut(d) {
 			return
 		}
+		d.Add(d, mod30Wheel[i])
+		i = (i + 1) % len(mod30Wheel)
 	}
 	if t.Cmp(one) != 0 {
 		factorFn(t, one)
