@@ -49,7 +49,7 @@ func TrialDivide(n *big.Int, factorFn FactorFunction) {
 	}
 
 	// TODO(akalin): Use a mod-30 wheel.
-	for d := three; ; d.Add(d, two) {
+	for d := three; d.Cmp(t) <= 0; d.Add(d, two) {
 		var dSq big.Int
 		dSq.Mul(d, d)
 		if dSq.Cmp(n) > 0 {
