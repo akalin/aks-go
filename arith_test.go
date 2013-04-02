@@ -3,6 +3,34 @@ package main
 import "math/big"
 import "testing"
 
+// Phi(p) should return p-1 for prime p.
+func TestCalculateEulerPhiPrime(t *testing.T) {
+	one := big.NewInt(1)
+
+	phi := CalculateEulerPhiPrimePower(big.NewInt(2), one)
+	if phi.Cmp(one) != 0 {
+		t.Error(phi)
+	}
+
+	phi = CalculateEulerPhiPrimePower(big.NewInt(3), one)
+	if phi.Cmp(big.NewInt(2)) != 0 {
+		t.Error(phi)
+	}
+
+	phi = CalculateEulerPhiPrimePower(big.NewInt(103), one)
+	if phi.Cmp(big.NewInt(102)) != 0 {
+		t.Error(phi)
+	}
+}
+
+// Phi(p^k) should return p^(k-1)*(p-1) for prime p.
+func TestCalculateEulerPhiPrimePower(t *testing.T) {
+	phi := CalculateEulerPhiPrimePower(big.NewInt(3), big.NewInt(5))
+	if phi.Cmp(big.NewInt(162)) != 0 {
+		t.Error(phi)
+	}
+}
+
 // Converts a list of int64 pairs to a list of *big.Int pairs.
 func makeFactors(int64Factors [][2]int64) [][2]*big.Int {
 	factors := make([][2]*big.Int, len(int64Factors))

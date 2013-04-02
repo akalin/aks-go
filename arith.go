@@ -2,6 +2,17 @@ package main
 
 import "math/big"
 
+// Assuming p is prime, calculates and returns Phi(p^k) quickly.
+func CalculateEulerPhiPrimePower(p, k *big.Int) *big.Int {
+	var pMinusOne, kMinusOne big.Int
+	pMinusOne.Sub(p, big.NewInt(1))
+	kMinusOne.Sub(k, big.NewInt(1))
+	var phi big.Int
+	phi.Exp(p, &kMinusOne, nil)
+	phi.Mul(&phi, &pMinusOne)
+	return &phi
+}
+
 // A FactorFunction takes a prime and its multiplicity and returns
 // whether or not to continue trying to find more factors.
 type FactorFunction func(p, m *big.Int) bool
