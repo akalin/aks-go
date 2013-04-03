@@ -3,6 +3,66 @@ package main
 import "math/big"
 import "testing"
 
+func expSmall(x, y int64) int64 {
+	var z big.Int
+	z.Exp(big.NewInt(x), big.NewInt(y), nil)
+	return z.Int64()
+}
+
+func floorRootSmall(x, y int64) int64 {
+	return FloorRoot(big.NewInt(x), big.NewInt(y)).Int64()
+}
+
+// FloorRoot(x^y, y) should always yield x.
+func TestFloorRootExactPowers(t *testing.T) {
+	for i := int64(0); i < 16; i++ {
+		for j := int64(1); j < 16; j++ {
+			k := floorRootSmall(expSmall(i, j), j)
+			if k != i {
+				t.Error(i, j, k)
+			}
+		}
+	}
+}
+
+// FloorRoot(x^y + 1, y) should yield x for x >= 1 and y >= 2.
+func TestFloorRootSlightlyOverExactPower(t *testing.T) {
+	for i := int64(1); i < 16; i++ {
+		for j := int64(2); j < 16; j++ {
+			k := floorRootSmall(expSmall(i, j)+1, j)
+			if k != i {
+				t.Error(i, j, k)
+			}
+		}
+	}
+}
+
+// FloorRoot((x + 1)^y - 1, y) should yield x for x >= 1 and y >= 2.
+func TestFloorRootSlightlyUnderExactPower(t *testing.T) {
+	for i := int64(1); i < 16; i++ {
+		for j := int64(2); j < 16; j++ {
+			k := floorRootSmall(expSmall(i+1, j)-1, j)
+			if k != i {
+				t.Error(i, j, k)
+			}
+		}
+	}
+}
+
+// FloorRoot((x^y + (x + 1)^y) / 2, y) should yield x for x >= 1 and y
+// >= 2.
+func TestFloorRootMidwayBetweenExactPowers(t *testing.T) {
+	for i := int64(1); i < 16; i++ {
+		for j := int64(2); j < 16; j++ {
+			m := (expSmall(i, j) + expSmall(i+1, j)) / 2
+			k := floorRootSmall(m, j)
+			if k != i {
+				t.Error(i, j, k)
+			}
+		}
+	}
+}
+
 // Phi(p) should return p-1 for prime p.
 func TestCalculateEulerPhiPrime(t *testing.T) {
 	one := big.NewInt(1)

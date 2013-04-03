@@ -2,6 +2,53 @@ package main
 
 import "math/big"
 
+// Returns the greatest number y such that y^k <= x. x must be
+// non-negative and k must be positive.
+func FloorRoot(x, k *big.Int) *big.Int {
+	if x.Sign() < 0 {
+		panic("negative radicand")
+	}
+	if k.Sign() <= 0 {
+		panic("non-negative index")
+	}
+	if x.Sign() == 0 {
+		return &big.Int{}
+	}
+	one := big.NewInt(1)
+	var kMinusOne big.Int
+	kMinusOne.Sub(k, one)
+
+	// Calculate p = ceil((floor(lg(x)) + 1)/k).
+	var p, r big.Int
+	p.DivMod(big.NewInt(int64(x.BitLen())), k, &r)
+	if r.Sign() > 0 {
+		p.Add(&p, one)
+	}
+
+	y := &big.Int{}
+	y.Exp(big.NewInt(2), &p, nil)
+	for y.Cmp(one) > 0 {
+		// Calculate z = floor(((k-1)y + floor(x/y^{k-1}))/k).
+		var z1 big.Int
+		z1.Mul(&kMinusOne, y)
+
+		var z2 big.Int
+		var yPowKMinusOne big.Int
+		yPowKMinusOne.Exp(y, &kMinusOne, nil)
+		z2.Div(x, &yPowKMinusOne)
+
+		var z big.Int
+		z.Add(&z1, &z2)
+		z.Div(&z, k)
+
+		if z.Cmp(y) >= 0 {
+			return y
+		}
+		y = &z
+	}
+	return one
+}
+
 // Assuming p is prime, calculates and returns Phi(p^k) quickly.
 func CalculateEulerPhiPrimePower(p, k *big.Int) *big.Int {
 	var pMinusOne, kMinusOne big.Int
