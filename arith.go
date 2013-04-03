@@ -208,3 +208,13 @@ func CalculateMultiplicativeOrder(a, n *big.Int) *big.Int {
 	})
 	return o
 }
+
+// Calculate Phi(n) by factorizing it.
+func CalculateEulerPhi(n *big.Int) *big.Int {
+	phi := big.NewInt(1)
+	TrialDivide(n, func(q, e *big.Int) bool {
+		phi.Mul(phi, CalculateEulerPhiPrimePower(q, e))
+		return true
+	})
+	return phi
+}

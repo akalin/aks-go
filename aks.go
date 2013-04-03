@@ -150,15 +150,12 @@ func calculateAKSModulus(n *big.Int) *big.Int {
 	panic("Could not find AKS modulus")
 }
 
-// Returns floor(sqrt(r-1)) * ceil(lg(n)) + 1 > floor(sqrt(Phi(r))) * lg(n).
-//
-// TODO(akalin): Use Phi(r) instead of r-1.
+// Returns floor(sqrt(Phi(r))) * ceil(lg(n)) + 1 > floor(sqrt(Phi(r))) * lg(n).
 func calculateAKSUpperBound(n, r *big.Int) *big.Int {
 	one := big.NewInt(1)
 	two := big.NewInt(2)
 
-	M := &big.Int{}
-	M.Sub(r, one)
+	M := CalculateEulerPhi(r)
 	M = FloorRoot(M, two)
 	M.Mul(M, big.NewInt(int64(n.BitLen())))
 	M.Add(M, one)

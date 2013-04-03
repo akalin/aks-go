@@ -217,3 +217,13 @@ func TestCalculateMultiplicativeOrder(t *testing.T) {
 		t.Error(e)
 	}
 }
+
+// Check CalculateEulerPhi() with a small test case.
+func TestCalculateEulerPhi(t *testing.T) {
+	// 3888 = 2^4 * 3^5.
+	phi := CalculateEulerPhi(big.NewInt(3888))
+	// phi(3888) = phi(2^4) * phi(3^5) = 2^3 * 3^4 * 2 = 6^4 = 1296.
+	if phi.Cmp(big.NewInt(1296)) != 0 {
+		t.Error(phi)
+	}
+}
