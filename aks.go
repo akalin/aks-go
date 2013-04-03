@@ -162,6 +162,20 @@ func calculateAKSUpperBound(n, r *big.Int) *big.Int {
 	return M
 }
 
+// Returns the first factor of n less than M.
+func getFirstFactorBelow(n, M *big.Int) *big.Int {
+	var factor *big.Int
+	var mMinusOne big.Int
+	mMinusOne.Sub(M, big.NewInt(1))
+	TrialDivide(n, func(q, e *big.Int) bool {
+		if q.Cmp(M) < 0 && q.Cmp(n) < 0 {
+			factor = q
+		}
+		return false
+	}, &mMinusOne)
+	return factor
+}
+
 func main() {
 	numCPU := runtime.NumCPU()
 	runtime.GOMAXPROCS(numCPU)
@@ -177,15 +191,31 @@ func main() {
 		fmt.Fprintf(os.Stderr, "could not parse %s\n", os.Args[1])
 		os.Exit(-1)
 	}
-	if n.Cmp(big.NewInt(2)) < 0 {
+
+	two := big.NewInt(2)
+
+	if n.Cmp(two) < 0 {
 		fmt.Fprintf(os.Stderr, "n must be >= 2\n")
 		os.Exit(-1)
 	}
 
 	r := calculateAKSModulus(&n)
-	// TODO(akalin): Check for factors less than M.
 	M := calculateAKSUpperBound(&n, r)
 	fmt.Printf("n = %v, r = %v, M = %v\n", &n, r, M)
+	factor := getFirstFactorBelow(&n, M)
+	if factor != nil {
+		fmt.Printf("n has factor %v\n", factor)
+		return
+	}
+
+	fmt.Printf("n has no factor less than %v\n", M)
+	sqrtN := FloorRoot(&n, two)
+	if M.Cmp(sqrtN) > 0 {
+		fmt.Printf("%v is greater than sqrt(%v), so %v is prime\n",
+			M, &n, &n)
+		return
+	}
+
 	a := getAKSWitness(&n, r, M, numCPU)
 	if a != nil {
 		fmt.Printf("n is composite with AKS witness %v\n", a)
