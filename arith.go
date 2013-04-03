@@ -101,8 +101,11 @@ func TrialDivide(n *big.Int, factorFn FactorFunction) {
 		return
 	}
 
+	upperBound := FloorRoot(n, two)
+
 	t := &big.Int{}
 	t.Set(n)
+
 	// Factors out d from t as much as possible and calls factorFn
 	// if d divides t.
 	factorOut := func(d *big.Int) bool {
@@ -114,6 +117,7 @@ func TrialDivide(n *big.Int, factorFn FactorFunction) {
 				break
 			}
 			t = &q
+			upperBound = Min(upperBound, t)
 			m.Add(&m, one)
 		}
 		if m.Sign() != 0 {
@@ -124,29 +128,27 @@ func TrialDivide(n *big.Int, factorFn FactorFunction) {
 		return true
 	}
 
-	sqrtN := FloorRoot(n, two)
-
 	// Try small primes first.
-	if two.Cmp(t) <= 0 && two.Cmp(sqrtN) <= 0 && !factorOut(two) {
+	if two.Cmp(upperBound) <= 0 && !factorOut(two) {
 		return
 	}
 
-	if three.Cmp(t) <= 0 && three.Cmp(sqrtN) <= 0 && !factorOut(three) {
+	if three.Cmp(upperBound) <= 0 && !factorOut(three) {
 		return
 	}
 
-	if five.Cmp(t) <= 0 && five.Cmp(sqrtN) <= 0 && !factorOut(five) {
+	if five.Cmp(upperBound) <= 0 && !factorOut(five) {
 		return
 	}
 
-	if seven.Cmp(t) <= 0 && seven.Cmp(sqrtN) <= 0 && !factorOut(seven) {
+	if seven.Cmp(upperBound) <= 0 && !factorOut(seven) {
 		return
 	}
 
 	// Then run through a mod-30 wheel, which cuts the number of
 	// odd numbers to test roughly in half.
 	mod30Wheel := []*big.Int{four, two, four, two, four, six, two, six}
-	for i, d := 1, eleven; d.Cmp(t) <= 0 && d.Cmp(sqrtN) <= 0; {
+	for i, d := 1, eleven; d.Cmp(upperBound) <= 0; {
 		if !factorOut(d) {
 			return
 		}
