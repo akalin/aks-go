@@ -137,7 +137,8 @@ func testTrialDivide(n int64, expectedFactors [][2]int64, t *testing.T) {
 	TrialDivide(
 		big.NewInt(n),
 		makeExpectingFactorFunction(
-			n, expectedFactors, &comparedFactors, t))
+			n, expectedFactors, &comparedFactors, t),
+		nil)
 	if comparedFactors != len(expectedFactors) {
 		t.Error(n, comparedFactors, len(expectedFactors))
 	}
@@ -180,7 +181,7 @@ func TestTrialDividePartial(t *testing.T) {
 		}
 		return expectingFactorFunction(p, m)
 	}
-	TrialDivide(big.NewInt(n), partialFactorFunction)
+	TrialDivide(big.NewInt(n), partialFactorFunction, nil)
 	if comparedFactors != len(expectedFactors) {
 		t.Error(comparedFactors, len(expectedFactors))
 	}

@@ -83,8 +83,9 @@ func CalculateEulerPhiPrimePower(p, k *big.Int) *big.Int {
 type FactorFunction func(p, m *big.Int) bool
 
 // Does trial division to find factors of n and passes them to the
-// given FactorFunction until it indicates otherwise.
-func TrialDivide(n *big.Int, factorFn FactorFunction) {
+// given FactorFunction until it indicates otherwise. If upperBound is
+// not nil, only factors less than or equal to it will be tried.
+func TrialDivide(n *big.Int, factorFn FactorFunction, upperBound *big.Int) {
 	one := big.NewInt(1)
 	two := big.NewInt(2)
 	three := big.NewInt(3)
@@ -101,7 +102,9 @@ func TrialDivide(n *big.Int, factorFn FactorFunction) {
 		return
 	}
 
-	upperBound := FloorRoot(n, two)
+	if upperBound == nil {
+		upperBound = FloorRoot(n, two)
+	}
 
 	t := &big.Int{}
 	t.Set(n)
@@ -190,7 +193,7 @@ func CalculateMultiplicativeOrderPrimePower(a, p, k *big.Int) *big.Int {
 
 	var pMinusOne big.Int
 	pMinusOne.Sub(p, one)
-	TrialDivide(&pMinusOne, processPrimeFactor)
+	TrialDivide(&pMinusOne, processPrimeFactor, nil)
 
 	return o
 }
@@ -207,7 +210,7 @@ func CalculateMultiplicativeOrder(a, n *big.Int) *big.Int {
 		o.Div(o, &gcd)
 		o.Mul(o, oq)
 		return true
-	})
+	}, nil)
 	return o
 }
 
@@ -217,6 +220,6 @@ func CalculateEulerPhi(n *big.Int) *big.Int {
 	TrialDivide(n, func(q, e *big.Int) bool {
 		phi.Mul(phi, CalculateEulerPhiPrimePower(q, e))
 		return true
-	})
+	}, nil)
 	return phi
 }
