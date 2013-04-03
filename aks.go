@@ -150,6 +150,21 @@ func calculateAKSModulus(n *big.Int) *big.Int {
 	panic("Could not find AKS modulus")
 }
 
+// Returns floor(sqrt(r-1)) * ceil(lg(n)) + 1 > floor(sqrt(Phi(r))) * lg(n).
+//
+// TODO(akalin): Use Phi(r) instead of r-1.
+func calculateAKSUpperBound(n, r *big.Int) *big.Int {
+	one := big.NewInt(1)
+	two := big.NewInt(2)
+
+	M := &big.Int{}
+	M.Sub(r, one)
+	M = FloorRoot(M, two)
+	M.Mul(M, big.NewInt(int64(n.BitLen())))
+	M.Add(M, one)
+	return M
+}
+
 func main() {
 	numCPU := runtime.NumCPU()
 	runtime.GOMAXPROCS(numCPU)
@@ -171,11 +186,10 @@ func main() {
 	}
 
 	r := calculateAKSModulus(&n)
-	// TODO(akalin): Calculate M properly and check for factors
-	// less than M.
-	M := n
-	fmt.Printf("n = %v, r = %v, M = %v\n", &n, r, &M)
-	a := getAKSWitness(&n, r, &M, numCPU)
+	// TODO(akalin): Check for factors less than M.
+	M := calculateAKSUpperBound(&n, r)
+	fmt.Printf("n = %v, r = %v, M = %v\n", &n, r, M)
+	a := getAKSWitness(&n, r, M, numCPU)
 	if a != nil {
 		fmt.Printf("n is composite with AKS witness %v\n", a)
 	} else {
