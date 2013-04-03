@@ -2,6 +2,24 @@ package main
 
 import "math/big"
 
+// Returns the smaller of x and y. No copies are made, so the returned
+// pointer is either x or y.
+func Min(x, y *big.Int) *big.Int {
+	if x.Cmp(y) < 0 {
+		return x
+	}
+	return y
+}
+
+// Returns the larger of x and y. No copies are made, so the returned
+// pointer is either x or y.
+func Max(x, y *big.Int) *big.Int {
+	if x.Cmp(y) > 0 {
+		return x
+	}
+	return y
+}
+
 // Returns the greatest number y such that y^k <= x. x must be
 // non-negative and k must be positive.
 func FloorRoot(x, k *big.Int) *big.Int {
