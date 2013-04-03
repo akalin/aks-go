@@ -174,3 +174,19 @@ func CalculateMultiplicativeOrderPrimePower(a, p, k *big.Int) *big.Int {
 
 	return o
 }
+
+// Assuming that a and n are coprime, returns the smallest power e of
+// a such that a^e = 1 (mod n).
+func CalculateMultiplicativeOrder(a, n *big.Int) *big.Int {
+	o := big.NewInt(1)
+	TrialDivide(n, func(q, e *big.Int) bool {
+		oq := CalculateMultiplicativeOrderPrimePower(a, q, e)
+		// Set o to lcm(o, oq).
+		var gcd big.Int
+		gcd.GCD(nil, nil, o, oq)
+		o.Div(o, &gcd)
+		o.Mul(o, oq)
+		return true
+	})
+	return o
+}

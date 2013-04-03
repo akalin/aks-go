@@ -204,3 +204,16 @@ func TestCalculateMultiplicativeOrderPrimePower(t *testing.T) {
 		t.Error(e)
 	}
 }
+
+func calculateMultiplicativeOrderSmall(a, n int64) int64 {
+	return CalculateMultiplicativeOrder(
+		big.NewInt(a), big.NewInt(n)).Int64()
+}
+
+// Check CalculateMultiplicativeOrder() with a small test case.
+func TestCalculateMultiplicativeOrder(t *testing.T) {
+	e := calculateMultiplicativeOrderSmall(3, 25600)
+	if e != 1280 {
+		t.Error(e)
+	}
+}
