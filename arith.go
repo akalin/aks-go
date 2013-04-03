@@ -139,3 +139,38 @@ func TrialDivide(n *big.Int, factorFn FactorFunction) {
 		factorFn(t, one)
 	}
 }
+
+// Assuming that p is prime and a and p^k are coprime, returns the
+// smallest power e of a such that a^e = 1 (mod p^k).
+func CalculateMultiplicativeOrderPrimePower(a, p, k *big.Int) *big.Int {
+	var n big.Int
+	n.Exp(p, k, nil)
+	t := CalculateEulerPhiPrimePower(p, k)
+
+	o := big.NewInt(1)
+	one := big.NewInt(1)
+	processPrimeFactor := func(q, e *big.Int) bool {
+		// Calculate x = a^(t/q^e) (mod n).
+		var x big.Int
+		x.Exp(q, e, nil)
+		x.Div(t, &x)
+		x.Exp(a, &x, &n)
+		for x.Cmp(one) != 0 {
+			o.Mul(o, q)
+			x.Exp(&x, q, &n)
+		}
+		return true
+	}
+
+	if k.Cmp(one) > 0 {
+		var kMinusOne big.Int
+		kMinusOne.Sub(k, one)
+		processPrimeFactor(p, &kMinusOne)
+	}
+
+	var pMinusOne big.Int
+	pMinusOne.Sub(p, one)
+	TrialDivide(&pMinusOne, processPrimeFactor)
+
+	return o
+}

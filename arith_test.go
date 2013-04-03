@@ -185,3 +185,22 @@ func TestTrialDividePartial(t *testing.T) {
 		t.Error(comparedFactors, len(expectedFactors))
 	}
 }
+
+func calculateMultiplicativeOrderPrimePowerSmall(a, p, k int64) int64 {
+	return CalculateMultiplicativeOrderPrimePower(
+		big.NewInt(a), big.NewInt(p), big.NewInt(k)).Int64()
+}
+
+// Check CalculateMultiplicativeOrderPrimePower() with some small test
+// cases.
+func TestCalculateMultiplicativeOrderPrimePower(t *testing.T) {
+	e := calculateMultiplicativeOrderPrimePowerSmall(4, 7, 1)
+	if e != 3 {
+		t.Error(e)
+	}
+
+	e = calculateMultiplicativeOrderPrimePowerSmall(3, 2, 10)
+	if e != 256 {
+		t.Error(e)
+	}
+}
