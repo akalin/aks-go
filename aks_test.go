@@ -1,0 +1,51 @@
+package main
+
+import "math/big"
+import "testing"
+
+// Benchmark isAKSWitness for the first prime number of the given
+// number of decimal digits.
+func runIsAKSWitnessBenchmark(b *testing.B, numDigits int64) {
+	b.StopTimer()
+	one := big.NewInt(1)
+	n := big.NewInt(10)
+	n.Exp(n, big.NewInt(numDigits), nil)
+	rounds := 10
+	for !n.ProbablyPrime(rounds) {
+		n.Add(n, one)
+	}
+	r := calculateAKSModulus(n)
+	// Any a > 1 suffices.
+	a := big.NewInt(2)
+
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		isAKSWitness(n, r, a)
+	}
+}
+
+// Benchmark isAKSWitness for values of n of varying digit sizes.
+
+func BenchmarkIsAKSWitness3Digits(b *testing.B) {
+	runIsAKSWitnessBenchmark(b, 3)
+}
+
+func BenchmarkIsAKSWitness4Digits(b *testing.B) {
+	runIsAKSWitnessBenchmark(b, 4)
+}
+
+func BenchmarkIsAKSWitness5Digits(b *testing.B) {
+	runIsAKSWitnessBenchmark(b, 5)
+}
+
+func BenchmarkIsAKSWitness6Digits(b *testing.B) {
+	runIsAKSWitnessBenchmark(b, 6)
+}
+
+func BenchmarkIsAKSWitness7Digits(b *testing.B) {
+	runIsAKSWitnessBenchmark(b, 7)
+}
+
+func BenchmarkIsAKSWitness8Digits(b *testing.B) {
+	runIsAKSWitnessBenchmark(b, 8)
+}
