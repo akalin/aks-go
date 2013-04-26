@@ -24,6 +24,20 @@ func isAKSWitness(n, r, a *big.Int) bool {
 	return isWitness
 }
 
+// Returns whether (X + a)^n = X^n + a mod (n, X^r - 1) given that n
+// fits into a Word.
+func isAKSWitnessWord(n, r, a Word) bool {
+	lhs := NewWordPoly(a, 1, n, r)
+	tmp1 := NewWordPoly(0, 0, n, r)
+	tmp2 := NewWordPoly(0, 0, n, r)
+	lhs.Pow(n, tmp1, tmp2)
+
+	rhs := NewWordPoly(a, n, n, r)
+
+	isWitness := !lhs.Eq(rhs)
+	return isWitness
+}
+
 // Returns the first AKS witness of n with the parameters r and M, or
 // nil if there isn't one.
 func getFirstAKSWitness(n, r, M *big.Int, logger *log.Logger) *big.Int {
