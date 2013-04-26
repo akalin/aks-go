@@ -6,7 +6,8 @@ import "fmt"
 // TODO(akalin): Use uintptr instead.
 type Word uint32
 
-const _WORD_BITS = 32
+// The size of Word in bits.
+const WORD_BITS = 32
 
 // A WordPoly represents a polynomial with Word coefficients.
 //
@@ -70,7 +71,7 @@ func (p *WordPoly) Pow(N Word, tmp1, tmp2 *WordPoly) {
 	}
 
 	// Find N's highest set bit.
-	i := _WORD_BITS - 1
+	i := WORD_BITS - 1
 	for ; (i >= 0) && ((N & (1 << uint(i))) == 0); i-- {
 	}
 

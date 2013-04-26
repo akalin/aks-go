@@ -38,12 +38,31 @@ func isAKSWitnessWord(n, r, a Word) bool {
 	return isWitness
 }
 
+// Returns a big.Int one plus the largest representable number that
+// fits in a Word.
+func calculateAKSWitnessWordThreshold() *big.Int {
+	threshold := big.NewInt(1)
+	threshold.Lsh(threshold, WORD_BITS)
+	return threshold
+}
+
+var isAKSWitnessWordThreshold *big.Int = calculateAKSWitnessWordThreshold()
+
 // Returns the first AKS witness of n with the parameters r and M, or
 // nil if there isn't one.
 func getFirstAKSWitness(n, r, M *big.Int, logger *log.Logger) *big.Int {
 	for a := big.NewInt(1); a.Cmp(M) < 0; a.Add(a, big.NewInt(1)) {
 		logger.Printf("Testing %v (M = %v)...\n", a, M)
-		if isWitness := isAKSWitness(n, r, a); isWitness {
+		var isWitness bool
+		if n.Cmp(isAKSWitnessWordThreshold) < 0 {
+			isWitness = isAKSWitnessWord(
+				Word(n.Int64()),
+				Word(r.Int64()),
+				Word(a.Int64()))
+		} else {
+			isWitness = isAKSWitness(n, r, a)
+		}
+		if isWitness {
 			return a
 		}
 	}
@@ -65,7 +84,15 @@ func testAKSWitnesses(
 	logger *log.Logger) {
 	for a := range numberCh {
 		logger.Printf("Testing %v...\n", a)
-		isWitness := isAKSWitness(n, r, a)
+		var isWitness bool
+		if n.Cmp(isAKSWitnessWordThreshold) < 0 {
+			isWitness = isAKSWitnessWord(
+				Word(n.Int64()),
+				Word(r.Int64()),
+				Word(a.Int64()))
+		} else {
+			isWitness = isAKSWitness(n, r, a)
+		}
 		logger.Printf("Finished testing %v (isWitness=%t)\n",
 			a, isWitness)
 		resultCh <- witnessResult{a, isWitness}
