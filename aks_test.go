@@ -116,6 +116,32 @@ func BenchmarkIsAKSWitnessWord10Digits(b *testing.B) {
 	runIsAKSWitnessWordBenchmark(b, 10)
 }
 
+func BenchmarkIsAKSWitnessMax32(b *testing.B) {
+	b.StopTimer()
+	n := big.NewInt(4294967291)
+	r := calculateAKSModulus(n)
+	// Any a > 1 suffices.
+	a := big.NewInt(2)
+
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		isAKSWitness(n, r, a)
+	}
+}
+
+func BenchmarkIsAKSWitnessWordMax32(b *testing.B) {
+	b.StopTimer()
+	var n Word = 4294967291
+	r := Word(calculateAKSModulus(big.NewInt(int64(n))).Int64())
+	// Any a > 1 suffices.
+	var a Word = 2
+
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		isAKSWitnessWord(n, r, a)
+	}
+}
+
 var nullLogger *log.Logger = log.New(ioutil.Discard, "", 0)
 
 // Benchmark getFirstAKSWitness for the first prime number of the
