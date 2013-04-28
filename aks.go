@@ -1,6 +1,7 @@
 package main
 
 import "fmt"
+import "log"
 import "math/big"
 import "os"
 import "runtime"
@@ -25,9 +26,9 @@ func isAKSWitness(n, r, a *big.Int) bool {
 
 // Returns the first AKS witness of n with the parameters r and M, or
 // nil if there isn't one.
-func getFirstAKSWitness(n, r, M *big.Int) *big.Int {
+func getFirstAKSWitness(n, r, M *big.Int, logger *log.Logger) *big.Int {
 	for a := big.NewInt(1); a.Cmp(M) < 0; a.Add(a, big.NewInt(1)) {
-		fmt.Printf("Testing %v (M = %v)...\n", a, M)
+		logger.Printf("Testing %v (M = %v)...\n", a, M)
 		if isWitness := isAKSWitness(n, r, a); isWitness {
 			return a
 		}
@@ -46,11 +47,12 @@ type witnessResult struct {
 func testAKSWitnesses(
 	n, r *big.Int,
 	numberCh chan *big.Int,
-	resultCh chan witnessResult) {
+	resultCh chan witnessResult,
+	logger *log.Logger) {
 	for a := range numberCh {
-		fmt.Printf("Testing %v...\n", a)
+		logger.Printf("Testing %v...\n", a)
 		isWitness := isAKSWitness(n, r, a)
-		fmt.Printf("Finished testing %v (isWitness=%t)\n",
+		logger.Printf("Finished testing %v (isWitness=%t)\n",
 			a, isWitness)
 		resultCh <- witnessResult{a, isWitness}
 	}
@@ -58,12 +60,15 @@ func testAKSWitnesses(
 
 // Returns an AKS witness of n with the parameters r and M, or nil if
 // there isn't one. Tests up to maxOutstanding numbers at once.
-func getAKSWitness(n, r, M *big.Int, maxOutstanding int) *big.Int {
+func getAKSWitness(
+	n, r, M *big.Int,
+	maxOutstanding int,
+	logger *log.Logger) *big.Int {
 	numberCh := make(chan *big.Int, maxOutstanding)
 	defer close(numberCh)
 	resultCh := make(chan witnessResult, maxOutstanding)
 	for i := 0; i < maxOutstanding; i++ {
-		go testAKSWitnesses(n, r, numberCh, resultCh)
+		go testAKSWitnesses(n, r, numberCh, resultCh, logger)
 	}
 
 	// Send off all numbers for testing, draining any results that
@@ -73,7 +78,7 @@ func getAKSWitness(n, r, M *big.Int, maxOutstanding int) *big.Int {
 		select {
 		case result := <-resultCh:
 			tested.Add(tested, big.NewInt(1))
-			fmt.Printf("%v isWitness=%t\n",
+			logger.Printf("%v isWitness=%t\n",
 				result.a, result.isWitness)
 			if result.isWitness {
 				return result.a
@@ -90,7 +95,7 @@ func getAKSWitness(n, r, M *big.Int, maxOutstanding int) *big.Int {
 	for tested.Cmp(M) < 0 {
 		result := <-resultCh
 		tested.Add(tested, big.NewInt(1))
-		fmt.Printf("%v isWitness=%t\n", result.a, result.isWitness)
+		logger.Printf("%v isWitness=%t\n", result.a, result.isWitness)
 		if result.isWitness {
 			return result.a
 		}
@@ -216,7 +221,7 @@ func main() {
 		return
 	}
 
-	a := getAKSWitness(&n, r, M, numCPU)
+	a := getAKSWitness(&n, r, M, numCPU, log.New(os.Stderr, "", 0))
 	if a != nil {
 		fmt.Printf("n is composite with AKS witness %v\n", a)
 	} else {
