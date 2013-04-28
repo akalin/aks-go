@@ -3,6 +3,7 @@ package main
 import "io/ioutil"
 import "log"
 import "math/big"
+import "runtime"
 import "testing"
 
 // The number of rounds to use for big.Int.ProbablyPrime().
@@ -100,4 +101,44 @@ func BenchmarkGetFirstAKSWitness7Digits(b *testing.B) {
 
 func BenchmarkGetFirstAKSWitness8Digits(b *testing.B) {
 	runGetFirstAKSWitnessBenchmark(b, 8)
+}
+
+// Benchmark getAKSWitness for the first prime number of the given
+// number of decimal digits.
+func runGetAKSWitnessBenchmark(b *testing.B, numDigits int64) {
+	b.StopTimer()
+	n := getFirstPrimeWithDigits(numDigits)
+	r := calculateAKSModulus(n)
+	M := big.NewInt(10)
+
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		getAKSWitness(n, r, M, runtime.GOMAXPROCS(0), nullLogger)
+	}
+}
+
+// Benchmark getFirstAKSWitness for values of n of varying digit sizes.
+
+func BenchmarkGetAKSWitness3Digits(b *testing.B) {
+	runGetAKSWitnessBenchmark(b, 3)
+}
+
+func BenchmarkGetAKSWitness4Digits(b *testing.B) {
+	runGetAKSWitnessBenchmark(b, 4)
+}
+
+func BenchmarkGetAKSWitness5Digits(b *testing.B) {
+	runGetAKSWitnessBenchmark(b, 5)
+}
+
+func BenchmarkGetAKSWitness6Digits(b *testing.B) {
+	runGetAKSWitnessBenchmark(b, 6)
+}
+
+func BenchmarkGetAKSWitness7Digits(b *testing.B) {
+	runGetAKSWitnessBenchmark(b, 7)
+}
+
+func BenchmarkGetAKSWitness8Digits(b *testing.B) {
+	runGetAKSWitnessBenchmark(b, 8)
 }
