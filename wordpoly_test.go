@@ -116,3 +116,28 @@ func TestWordPolyPow(t *testing.T) {
 		t.Error(dumpWordPoly(p), dumpWordPoly(q))
 	}
 }
+
+// Make sure that polynomials get converted to strings in standard
+// notation.
+func TestWordPolyFormat(t *testing.T) {
+	var N Word = 101
+	var R Word = 53
+
+	p := &WordPoly{}
+	str := fmt.Sprint(p)
+	if str != "0" {
+		t.Error(dumpWordPoly(p), str)
+	}
+
+	p = NewWordPoly(2, 3, N, R)
+	str = fmt.Sprint(p)
+	if str != "x^3 + 2" {
+		t.Error(dumpWordPoly(p), str)
+	}
+
+	p = NewWordPoly(1, 1, N, R)
+	str = fmt.Sprint(p)
+	if str != "x + 1" {
+		t.Error(dumpWordPoly(p), str)
+	}
+}

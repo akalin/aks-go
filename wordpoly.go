@@ -1,5 +1,7 @@
 package main
 
+import "fmt"
+
 // A Word represents a coefficient of a WordPoly.
 // TODO(akalin): Use uintptr instead.
 type Word uint32
@@ -79,4 +81,38 @@ func (p *WordPoly) Pow(N Word, tmp1, tmp2 *WordPoly) {
 		}
 	}
 	p.coeffs, tmp1.coeffs = tmp1.coeffs, p.coeffs
+}
+
+// fmt.Formatter implementation.
+func (p *WordPoly) Format(f fmt.State, c rune) {
+	i := len(p.coeffs) - 1
+	for ; i >= 0 && p.coeffs[i] == 0; i-- {
+	}
+
+	if i < 0 {
+		fmt.Fprint(f, "0")
+		return
+	}
+
+	// Formats coeff*x^deg.
+	formatNonZeroMonomial := func(f fmt.State, c rune, coeff, deg Word) {
+		if coeff != 1 || deg == 0 {
+			fmt.Fprint(f, coeff)
+		}
+		if deg != 0 {
+			fmt.Fprint(f, "x")
+			if deg > 1 {
+				fmt.Fprint(f, "^", deg)
+			}
+		}
+	}
+
+	formatNonZeroMonomial(f, c, p.coeffs[i], Word(i))
+
+	for i--; i >= 0; i-- {
+		if p.coeffs[i] != 0 {
+			fmt.Fprint(f, " + ")
+			formatNonZeroMonomial(f, c, p.coeffs[i], Word(i))
+		}
+	}
 }
