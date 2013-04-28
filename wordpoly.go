@@ -16,17 +16,24 @@ type WordPoly struct {
 	coeffs []Word
 }
 
-// Builds a new WordPoly representing X^k + a mod (N, X^R - 1). R must
-// fit into an int.
-func NewWordPoly(a, k, N, R Word) *WordPoly {
-	p := WordPoly{make([]Word, R)}
-	p.coeffs[0] = a % N
-	p.coeffs[k%R] = 1
-	return &p
+// Only polynomials built with the same value of N and R may be used
+// together in one of the functions below.
+
+// Builds a new WordPoly representing the zero polynomial
+// mod (N, X^R - 1). R must fit into an int.
+func NewWordPoly(N, R Word) *WordPoly {
+	return &WordPoly{make([]Word, R)}
 }
 
-// In the functions below, the polynomials in question must have been
-// built with the same value of N and R.
+// Sets p to X^k + a mod (N, X^R - 1).
+func (p *WordPoly) Set(a, k, N Word) {
+	R := len(p.coeffs)
+	p.coeffs[0] = a % N
+	for i := 1; i < R; i++ {
+		p.coeffs[i] = 0
+	}
+	p.coeffs[int(k%Word(R))] = 1
+}
 
 // Returns whether p has the same coefficients as q.
 func (p *WordPoly) Eq(q *WordPoly) bool {

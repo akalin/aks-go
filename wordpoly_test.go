@@ -33,15 +33,35 @@ func dumpWordPoly(p *WordPoly) string {
 	return s
 }
 
-// NewWordPoly(k, a, N, R) should return a polynomial representing
-// X^(k % R) + (a % N).
+// NewWordPoly(k, a, N, R) should return the zero polynomial
+// mod (N, X^R - 1).
 func TestNewWordPoly(t *testing.T) {
+	var N Word = 10
+	var R Word = 5
+	p := NewWordPoly(N, R)
+	q := []Word{0, 0, 0, 0, 0}
+	if !wordArraysEq(p.coeffs, q) {
+		t.Error(dumpWordPoly(p))
+	}
+}
+
+// WordPoly.Set() should set the polynomial to X^(k % R) + (a % N).
+func TestWordPolySet(t *testing.T) {
 	var a Word = 12
 	var k Word = 6
 	var N Word = 10
 	var R Word = 5
-	p := NewWordPoly(a, k, N, R)
+	p := NewWordPoly(N, R)
+	p.Set(a, k, N)
 	q := []Word{2, 1, 0, 0, 0}
+	if !wordArraysEq(p.coeffs, q) {
+		t.Error(dumpWordPoly(p))
+	}
+
+	a = 13
+	k = 7
+	p.Set(a, k, N)
+	q = []Word{3, 0, 1, 0, 0}
 	if !wordArraysEq(p.coeffs, q) {
 		t.Error(dumpWordPoly(p))
 	}
@@ -52,9 +72,12 @@ func TestWordPolyEq(t *testing.T) {
 	var N Word = 10
 	var R Word = 5
 
-	p := NewWordPoly(1, 2, N, R)
-	q := NewWordPoly(1, 3, N, R)
-	r := NewWordPoly(2, 3, N, R)
+	p := NewWordPoly(N, R)
+	p.Set(1, 2, N)
+	q := NewWordPoly(N, R)
+	q.Set(1, 3, N)
+	r := NewWordPoly(N, R)
+	r.Set(2, 3, N)
 
 	// Test reflexivity.
 	if !p.Eq(p) {
@@ -92,8 +115,9 @@ func TestWordPolyMul(t *testing.T) {
 	var N Word = 10
 	var R Word = 5
 
-	p := NewWordPoly(4, 3, N, R)
-	tmp := NewWordPoly(0, 0, N, R)
+	p := NewWordPoly(N, R)
+	p.Set(4, 3, N)
+	tmp := NewWordPoly(N, R)
 	p.mul(p, N, tmp)
 	q := []Word{6, 1, 0, 8, 0}
 	if !wordArraysEq(p.coeffs, q) {
@@ -107,11 +131,13 @@ func TestWordPolyPow(t *testing.T) {
 	var N Word = 101
 	var R Word = 53
 
-	p := NewWordPoly(a, 1, N, R)
-	tmp1 := NewWordPoly(0, 0, N, R)
-	tmp2 := NewWordPoly(0, 0, N, R)
+	p := NewWordPoly(N, R)
+	p.Set(a, 1, N)
+	tmp1 := NewWordPoly(N, R)
+	tmp2 := NewWordPoly(N, R)
 	p.Pow(N, tmp1, tmp2)
-	q := NewWordPoly(a, N, N, R)
+	q := NewWordPoly(N, R)
+	q.Set(a, N, N)
 	if !wordArraysEq(p.coeffs, q.coeffs) {
 		t.Error(dumpWordPoly(p), dumpWordPoly(q))
 	}
@@ -129,13 +155,15 @@ func TestWordPolyFormat(t *testing.T) {
 		t.Error(dumpWordPoly(p), str)
 	}
 
-	p = NewWordPoly(2, 3, N, R)
+	p = NewWordPoly(N, R)
+	p.Set(2, 3, N)
 	str = fmt.Sprint(p)
 	if str != "x^3 + 2" {
 		t.Error(dumpWordPoly(p), str)
 	}
 
-	p = NewWordPoly(1, 1, N, R)
+	p = NewWordPoly(N, R)
+	p.Set(1, 1, N)
 	str = fmt.Sprint(p)
 	if str != "x + 1" {
 		t.Error(dumpWordPoly(p), str)

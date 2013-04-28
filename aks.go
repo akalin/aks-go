@@ -25,15 +25,17 @@ func isAKSWitness(n, r, a *big.Int) bool {
 }
 
 // Returns whether (X + a)^n = X^n + a mod (n, X^r - 1) given that n
-// fits into a Word. tmp1 and tmp2 must be WordPoly objects
-// constructed with N, R = n, r.
-func isAKSWitnessWord(n, r, a Word, tmp1, tmp2 *WordPoly) bool {
-	lhs := NewWordPoly(a, 1, n, r)
-	lhs.Pow(n, tmp1, tmp2)
+// fits into a Word. tmp1, tmp2, and tmp3 must be WordPoly objects
+// constructed with N, R = n, r, and they must not alias each other.
+func isAKSWitnessWord(n, a Word, tmp1, tmp2, tmp3 *WordPoly) bool {
+	// Left-hand side: (X + a)^n mod (n, X^r - 1).
+	tmp1.Set(a, 1, n)
+	tmp1.Pow(n, tmp2, tmp3)
 
-	rhs := NewWordPoly(a, n, n, r)
+	// Right-hand side: (X^n + a) mod (n, X^r - 1).
+	tmp2.Set(a, n, n)
 
-	isWitness := !lhs.Eq(rhs)
+	isWitness := !tmp1.Eq(tmp2)
 	return isWitness
 }
 
@@ -50,14 +52,15 @@ var isAKSWitnessWordThreshold *big.Int = calculateAKSWitnessWordThreshold()
 // Returns the first AKS witness of n with the parameters r and M, or
 // nil if there isn't one.
 func getFirstAKSWitness(n, r, M *big.Int, logger *log.Logger) *big.Int {
-	var nWord, rWord Word
-	var tmp1, tmp2 *WordPoly
+	var nWord Word
+	var tmp1, tmp2, tmp3 *WordPoly
 	useWordFunctions := (n.Cmp(isAKSWitnessWordThreshold) < 0)
 	if useWordFunctions {
 		nWord = Word(n.Int64())
-		rWord = Word(r.Int64())
-		tmp1 = NewWordPoly(0, 0, nWord, rWord)
-		tmp2 = NewWordPoly(0, 0, nWord, rWord)
+		rWord := Word(r.Int64())
+		tmp1 = NewWordPoly(nWord, rWord)
+		tmp2 = NewWordPoly(nWord, rWord)
+		tmp3 = NewWordPoly(nWord, rWord)
 	}
 
 	for a := big.NewInt(1); a.Cmp(M) < 0; a.Add(a, big.NewInt(1)) {
@@ -66,7 +69,7 @@ func getFirstAKSWitness(n, r, M *big.Int, logger *log.Logger) *big.Int {
 		if useWordFunctions {
 			aWord := Word(a.Int64())
 			isWitness = isAKSWitnessWord(
-				nWord, rWord, aWord, tmp1, tmp2)
+				nWord, aWord, tmp1, tmp2, tmp3)
 		} else {
 			isWitness = isAKSWitness(n, r, a)
 		}
@@ -90,14 +93,15 @@ func testAKSWitnesses(
 	numberCh chan *big.Int,
 	resultCh chan witnessResult,
 	logger *log.Logger) {
-	var nWord, rWord Word
-	var tmp1, tmp2 *WordPoly
+	var nWord Word
+	var tmp1, tmp2, tmp3 *WordPoly
 	useWordFunctions := (n.Cmp(isAKSWitnessWordThreshold) < 0)
 	if useWordFunctions {
 		nWord = Word(n.Int64())
-		rWord = Word(r.Int64())
-		tmp1 = NewWordPoly(0, 0, nWord, rWord)
-		tmp2 = NewWordPoly(0, 0, nWord, rWord)
+		rWord := Word(r.Int64())
+		tmp1 = NewWordPoly(nWord, rWord)
+		tmp2 = NewWordPoly(nWord, rWord)
+		tmp3 = NewWordPoly(nWord, rWord)
 	}
 
 	for a := range numberCh {
@@ -106,7 +110,7 @@ func testAKSWitnesses(
 		if useWordFunctions {
 			aWord := Word(a.Int64())
 			isWitness = isAKSWitnessWord(
-				nWord, rWord, aWord, tmp1, tmp2)
+				nWord, aWord, tmp1, tmp2, tmp3)
 		} else {
 			isWitness = isAKSWitness(n, r, a)
 		}

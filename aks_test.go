@@ -76,12 +76,13 @@ func runIsAKSWitnessWordBenchmark(b *testing.B, numDigits int) {
 	// Any a > 1 suffices.
 	var a Word = 2
 
-	tmp1 := NewWordPoly(0, 0, n, r)
-	tmp2 := NewWordPoly(0, 0, n, r)
+	tmp1 := NewWordPoly(n, r)
+	tmp2 := NewWordPoly(n, r)
+	tmp3 := NewWordPoly(n, r)
 
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
-		isAKSWitnessWord(n, r, a, tmp1, tmp2)
+		isAKSWitnessWord(n, a, tmp1, tmp2, tmp3)
 	}
 }
 
@@ -139,12 +140,13 @@ func BenchmarkIsAKSWitnessWordMax32(b *testing.B) {
 	// Any a > 1 suffices.
 	var a Word = 2
 
-	tmp1 := NewWordPoly(0, 0, n, r)
-	tmp2 := NewWordPoly(0, 0, n, r)
+	tmp1 := NewWordPoly(n, r)
+	tmp2 := NewWordPoly(n, r)
+	tmp3 := NewWordPoly(n, r)
 
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
-		isAKSWitnessWord(n, r, a, tmp1, tmp2)
+		isAKSWitnessWord(n, a, tmp1, tmp2, tmp3)
 	}
 }
 
