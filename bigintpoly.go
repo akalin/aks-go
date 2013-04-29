@@ -63,3 +63,20 @@ func (p *BigIntPoly) mul(q *BigIntPoly, N big.Int, tmp *BigIntPoly) {
 	}
 	p.coeffs, tmp.coeffs = tmp.coeffs, p.coeffs
 }
+
+// Sets p to p^N mod (N, X^R - 1), where R is the size of p. tmp1 and
+// tmp2 must not alias each other or p.
+func (p *BigIntPoly) Pow(N big.Int, tmp1, tmp2 *BigIntPoly) {
+	R := len(p.coeffs)
+	for i := 0; i < R; i++ {
+		tmp1.coeffs[i].Set(&p.coeffs[i])
+	}
+
+	for i := N.BitLen() - 2; i >= 0; i-- {
+		tmp1.mul(tmp1, N, tmp2)
+		if N.Bit(i) != 0 {
+			tmp1.mul(p, N, tmp2)
+		}
+	}
+	p.coeffs, tmp1.coeffs = tmp1.coeffs, p.coeffs
+}

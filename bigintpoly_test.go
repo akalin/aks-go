@@ -133,3 +133,21 @@ func TestBigIntPolyMul(t *testing.T) {
 		t.Error(dumpBigIntPoly(p))
 	}
 }
+
+// (X + a)^N should equal X^n + a mod (N, X^R - 1) for prime N.
+func TestBigIntPolyPow(t *testing.T) {
+	a := *big.NewInt(2)
+	N := *big.NewInt(101)
+	R := *big.NewInt(53)
+
+	p := NewBigIntPoly(N, R)
+	p.Set(a, *big.NewInt(1), N)
+	tmp1 := NewBigIntPoly(N, R)
+	tmp2 := NewBigIntPoly(N, R)
+	p.Pow(N, tmp1, tmp2)
+	q := NewBigIntPoly(N, R)
+	q.Set(a, N, N)
+	if !bigIntArraysEq(p.coeffs, q.coeffs) {
+		t.Error(dumpBigIntPoly(p), dumpBigIntPoly(q))
+	}
+}
