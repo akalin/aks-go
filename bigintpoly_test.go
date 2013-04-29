@@ -75,3 +75,46 @@ func TestBigIntPolySet(t *testing.T) {
 		t.Error(dumpBigIntPoly(p))
 	}
 }
+
+// p.Eq(q) should return whether p and q have the same coefficients.
+func TestBigIntPolyEq(t *testing.T) {
+	N := *big.NewInt(10)
+	R := *big.NewInt(5)
+
+	p := NewBigIntPoly(N, R)
+	p.Set(*big.NewInt(1), *big.NewInt(2), N)
+	q := NewBigIntPoly(N, R)
+	q.Set(*big.NewInt(1), *big.NewInt(3), N)
+	r := NewBigIntPoly(N, R)
+	r.Set(*big.NewInt(2), *big.NewInt(3), N)
+
+	// Test reflexivity.
+	if !p.Eq(p) {
+		t.Error(dumpBigIntPoly(p))
+	}
+	if !q.Eq(q) {
+		t.Error(dumpBigIntPoly(q))
+	}
+	if !r.Eq(r) {
+		t.Error(dumpBigIntPoly(r))
+	}
+
+	if p.Eq(q) {
+		t.Error(dumpBigIntPoly(p), dumpBigIntPoly(q))
+	}
+	if p.Eq(r) {
+		t.Error(dumpBigIntPoly(p), dumpBigIntPoly(r))
+	}
+	if q.Eq(p) {
+		t.Error(dumpBigIntPoly(q), dumpBigIntPoly(p))
+	}
+	if q.Eq(r) {
+		t.Error(dumpBigIntPoly(q), dumpBigIntPoly(r))
+	}
+	if r.Eq(p) {
+		t.Error(dumpBigIntPoly(r), dumpBigIntPoly(p))
+	}
+	if r.Eq(q) {
+		t.Error(dumpBigIntPoly(r), dumpBigIntPoly(q))
+	}
+}

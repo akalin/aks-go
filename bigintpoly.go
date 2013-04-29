@@ -31,3 +31,14 @@ func (p *BigIntPoly) Set(a, k, N big.Int) {
 	i.Mod(&k, big.NewInt(int64(R)))
 	p.coeffs[int(i.Int64())] = *big.NewInt(1)
 }
+
+// Returns whether p has the same coefficients as q.
+func (p *BigIntPoly) Eq(q *BigIntPoly) bool {
+	R := len(p.coeffs)
+	for i := 0; i < R; i++ {
+		if p.coeffs[i].Cmp(&q.coeffs[i]) != 0 {
+			return false
+		}
+	}
+	return true
+}
