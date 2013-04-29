@@ -1,0 +1,21 @@
+This is an implementation of the AKS primality test (
+http://en.wikipedia.org/wiki/AKS_algorithm ) in Go.
+
+To build:
+
+go build *.go
+
+To test:
+
+go test *.go
+
+To run:
+
+# Should indicate composite.
+./aks 2993374621
+
+# Should indicate prime.
+./aks 2685241991
+
+Use of this source code is governed by a BSD-style license that can be
+found in the LICENSE file.
