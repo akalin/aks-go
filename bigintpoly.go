@@ -42,3 +42,24 @@ func (p *BigIntPoly) Eq(q *BigIntPoly) bool {
 	}
 	return true
 }
+
+// Sets p to the product of p and q mod (N, X^R - 1). tmp must not
+// alias p or q.
+func (p *BigIntPoly) mul(q *BigIntPoly, N big.Int, tmp *BigIntPoly) {
+	R := len(tmp.coeffs)
+	for i := 0; i < R; i++ {
+		tmp.coeffs[i] = big.Int{}
+	}
+
+	for i := 0; i < R; i++ {
+		for j := 0; j < R; j++ {
+			k := (i + j) % R
+			var e big.Int
+			e.Mul(&p.coeffs[i], &q.coeffs[j])
+			e.Add(&e, &tmp.coeffs[k])
+			e.Mod(&e, &N)
+			tmp.coeffs[k] = e
+		}
+	}
+	p.coeffs, tmp.coeffs = tmp.coeffs, p.coeffs
+}

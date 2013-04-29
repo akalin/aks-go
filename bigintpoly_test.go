@@ -118,3 +118,18 @@ func TestBigIntPolyEq(t *testing.T) {
 		t.Error(dumpBigIntPoly(r), dumpBigIntPoly(q))
 	}
 }
+
+// Multiplication should be modulo (N, X^R - 1).
+func TestBigIntPolyMul(t *testing.T) {
+	N := *big.NewInt(10)
+	R := *big.NewInt(5)
+
+	p := NewBigIntPoly(N, R)
+	p.Set(*big.NewInt(4), *big.NewInt(3), N)
+	tmp := NewBigIntPoly(N, R)
+	p.mul(p, N, tmp)
+	q := makeBigIntArray([]int64{6, 1, 0, 8, 0})
+	if !bigIntArraysEq(p.coeffs, q) {
+		t.Error(dumpBigIntPoly(p))
+	}
+}
