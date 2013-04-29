@@ -6,8 +6,6 @@ import "math/big"
 // A BigIntPoly represents a polynomial with big.Int coefficients.
 //
 // The zero value for a BigIntPoly represents the zero polynomial.
-//
-// TODO(akalin): Replace IntPoly with BigIntPoly.
 type BigIntPoly struct {
 	coeffs []big.Int
 }
