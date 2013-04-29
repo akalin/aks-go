@@ -70,8 +70,19 @@ func (p *BigIntPoly) mul(q *BigIntPoly, N big.Int, tmp1, tmp2 *BigIntPoly) {
 			k := (i + j) % R
 			// Set tmp1.coeffs[k] to (tmp1.coeffs[k] +
 			// p.coeffs[i] * q.coeffs[j]) % N.
+
 			tmp2.coeffs[k].Mul(&p.coeffs[i], &q.coeffs[j])
-			tmp2.coeffs[k].Add(&tmp2.coeffs[k], &tmp1.coeffs[k])
+
+			// Set tmp2.coeffs[k] to tmp2.coeffs[k] +
+			// tmp1.coeffs[k], avoid copying if possible.
+			if tmp2.coeffs[k].Sign() == 0 {
+				tmp2.coeffs[k], tmp1.coeffs[k] =
+					tmp1.coeffs[k], tmp2.coeffs[k]
+			} else if tmp1.coeffs[k].Sign() != 0 {
+				tmp2.coeffs[k].Add(
+					&tmp2.coeffs[k], &tmp1.coeffs[k])
+			}
+
 			// Use big.Int.QuoRem() instead of
 			// big.Int.Mod() since the latter allocates an
 			// extra big.Int.
