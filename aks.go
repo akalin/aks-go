@@ -7,12 +7,12 @@ import "os"
 import "runtime"
 
 // Returns whether (X + a)^n = X^n + a mod (n, X^r - 1). tmp1, tmp2,
-// and tmp3 must be BigIntPoly objects constructed with N, R = n, r,
-// and they must not alias each other.
-func isAKSWitness(n, a big.Int, tmp1, tmp2, tmp3 *BigIntPoly) bool {
+// tmp3, and tmp4 must be BigIntPoly objects constructed with N, R =
+// n, r, and they must not alias each other.
+func isAKSWitness(n, a big.Int, tmp1, tmp2, tmp3, tmp4 *BigIntPoly) bool {
 	// Left-hand side: (X + a)^n mod (n, X^r - 1).
 	tmp1.Set(a, *big.NewInt(1), n)
-	tmp1.Pow(n, tmp2, tmp3)
+	tmp1.Pow(n, tmp2, tmp3, tmp4)
 
 	// Right-hand side: (X^n + a) mod (n, X^r - 1).
 	tmp2.Set(a, n, n)
@@ -51,7 +51,7 @@ var isAKSWitnessWordThreshold *big.Int = calculateAKSWitnessWordThreshold()
 func getFirstAKSWitness(n, r, M *big.Int, logger *log.Logger) *big.Int {
 	var nWord Word
 	var wordTmp1, wordTmp2, wordTmp3 *WordPoly
-	var tmp1, tmp2, tmp3 *BigIntPoly
+	var tmp1, tmp2, tmp3, tmp4 *BigIntPoly
 	useWordFunctions := (n.Cmp(isAKSWitnessWordThreshold) < 0)
 	if useWordFunctions {
 		nWord = Word(n.Int64())
@@ -63,6 +63,7 @@ func getFirstAKSWitness(n, r, M *big.Int, logger *log.Logger) *big.Int {
 		tmp1 = NewBigIntPoly(*n, *r)
 		tmp2 = NewBigIntPoly(*n, *r)
 		tmp3 = NewBigIntPoly(*n, *r)
+		tmp4 = NewBigIntPoly(*n, *r)
 	}
 
 	for a := big.NewInt(1); a.Cmp(M) < 0; a.Add(a, big.NewInt(1)) {
@@ -73,7 +74,7 @@ func getFirstAKSWitness(n, r, M *big.Int, logger *log.Logger) *big.Int {
 			isWitness = isAKSWitnessWord(
 				nWord, aWord, wordTmp1, wordTmp2, wordTmp3)
 		} else {
-			isWitness = isAKSWitness(*n, *a, tmp1, tmp2, tmp3)
+			isWitness = isAKSWitness(*n, *a, tmp1, tmp2, tmp3, tmp4)
 		}
 		if isWitness {
 			return a
@@ -97,7 +98,7 @@ func testAKSWitnesses(
 	logger *log.Logger) {
 	var nWord Word
 	var wordTmp1, wordTmp2, wordTmp3 *WordPoly
-	var tmp1, tmp2, tmp3 *BigIntPoly
+	var tmp1, tmp2, tmp3, tmp4 *BigIntPoly
 	useWordFunctions := (n.Cmp(isAKSWitnessWordThreshold) < 0)
 	if useWordFunctions {
 		nWord = Word(n.Int64())
@@ -109,6 +110,7 @@ func testAKSWitnesses(
 		tmp1 = NewBigIntPoly(*n, *r)
 		tmp2 = NewBigIntPoly(*n, *r)
 		tmp3 = NewBigIntPoly(*n, *r)
+		tmp4 = NewBigIntPoly(*n, *r)
 	}
 
 	for a := range numberCh {
@@ -119,7 +121,7 @@ func testAKSWitnesses(
 			isWitness = isAKSWitnessWord(
 				nWord, aWord, wordTmp1, wordTmp2, wordTmp3)
 		} else {
-			isWitness = isAKSWitness(*n, *a, tmp1, tmp2, tmp3)
+			isWitness = isAKSWitness(*n, *a, tmp1, tmp2, tmp3, tmp4)
 		}
 		logger.Printf("Finished testing %v (isWitness=%t)\n",
 			a, isWitness)

@@ -57,39 +57,37 @@ func (p *BigIntPoly) Eq(q *BigIntPoly) bool {
 	return true
 }
 
-// Sets p to the product of p and q mod (N, X^R - 1). tmp must not
-// alias p or q.
-func (p *BigIntPoly) mul(q *BigIntPoly, N big.Int, tmp *BigIntPoly) {
-	R := len(tmp.coeffs)
+// Sets p to the product of p and q mod (N, X^R - 1). tmp1 and tmp2
+// must not alias each other or p or q.
+func (p *BigIntPoly) mul(q *BigIntPoly, N big.Int, tmp1, tmp2 *BigIntPoly) {
+	R := len(tmp1.coeffs)
 	for i := 0; i < R; i++ {
-		tmp.coeffs[i].Set(&big.Int{})
+		tmp1.coeffs[i].Set(&big.Int{})
 	}
 
 	for i := 0; i < R; i++ {
 		for j := 0; j < R; j++ {
 			k := (i + j) % R
-			var e big.Int
-			e.Mul(&p.coeffs[i], &q.coeffs[j])
-			e.Add(&e, &tmp.coeffs[k])
-			e.Mod(&e, &N)
-			tmp.coeffs[k] = e
+			tmp2.coeffs[k].Mul(&p.coeffs[i], &q.coeffs[j])
+			tmp2.coeffs[k].Add(&tmp2.coeffs[k], &tmp1.coeffs[k])
+			tmp1.coeffs[k].Mod(&tmp2.coeffs[k], &N)
 		}
 	}
-	p.coeffs, tmp.coeffs = tmp.coeffs, p.coeffs
+	p.coeffs, tmp1.coeffs = tmp1.coeffs, p.coeffs
 }
 
-// Sets p to p^N mod (N, X^R - 1), where R is the size of p. tmp1 and
-// tmp2 must not alias each other or p.
-func (p *BigIntPoly) Pow(N big.Int, tmp1, tmp2 *BigIntPoly) {
+// Sets p to p^N mod (N, X^R - 1), where R is the size of p. tmp1,
+// tmp2, and tmp3 must not alias each other or p.
+func (p *BigIntPoly) Pow(N big.Int, tmp1, tmp2, tmp3 *BigIntPoly) {
 	R := len(p.coeffs)
 	for i := 0; i < R; i++ {
 		tmp1.coeffs[i].Set(&p.coeffs[i])
 	}
 
 	for i := N.BitLen() - 2; i >= 0; i-- {
-		tmp1.mul(tmp1, N, tmp2)
+		tmp1.mul(tmp1, N, tmp2, tmp3)
 		if N.Bit(i) != 0 {
-			tmp1.mul(p, N, tmp2)
+			tmp1.mul(p, N, tmp2, tmp3)
 		}
 	}
 	p.coeffs, tmp1.coeffs = tmp1.coeffs, p.coeffs
