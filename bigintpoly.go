@@ -1,5 +1,6 @@
 package main
 
+import "fmt"
 import "math/big"
 
 // A BigIntPoly represents a polynomial with big.Int coefficients.
@@ -79,4 +80,40 @@ func (p *BigIntPoly) Pow(N big.Int, tmp1, tmp2 *BigIntPoly) {
 		}
 	}
 	p.coeffs, tmp1.coeffs = tmp1.coeffs, p.coeffs
+}
+
+// fmt.Formatter implementation.
+func (p *BigIntPoly) Format(f fmt.State, c rune) {
+	i := len(p.coeffs) - 1
+	for ; i >= 0 && p.coeffs[i].Sign() == 0; i-- {
+	}
+
+	if i < 0 {
+		fmt.Fprint(f, "0")
+		return
+	}
+
+	// Formats coeff*x^deg.
+	formatNonZeroMonomial := func(
+		f fmt.State, c rune,
+		coeff big.Int, deg int) {
+		if coeff.Cmp(big.NewInt(1)) != 0 || deg == 0 {
+			fmt.Fprint(f, &coeff)
+		}
+		if deg != 0 {
+			fmt.Fprint(f, "x")
+			if deg > 1 {
+				fmt.Fprint(f, "^", deg)
+			}
+		}
+	}
+
+	formatNonZeroMonomial(f, c, p.coeffs[i], i)
+
+	for i--; i >= 0; i-- {
+		if p.coeffs[i].Sign() != 0 {
+			fmt.Fprint(f, " + ")
+			formatNonZeroMonomial(f, c, p.coeffs[i], i)
+		}
+	}
 }

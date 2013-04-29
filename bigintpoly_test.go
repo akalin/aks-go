@@ -151,3 +151,30 @@ func TestBigIntPolyPow(t *testing.T) {
 		t.Error(dumpBigIntPoly(p), dumpBigIntPoly(q))
 	}
 }
+
+// Make sure that polynomials get converted to strings in standard
+// notation.
+func TestBigIntPolyFormat(t *testing.T) {
+	N := *big.NewInt(101)
+	R := *big.NewInt(53)
+
+	p := &BigIntPoly{}
+	str := fmt.Sprint(p)
+	if str != "0" {
+		t.Error(dumpBigIntPoly(p), str)
+	}
+
+	p = NewBigIntPoly(N, R)
+	p.Set(*big.NewInt(2), *big.NewInt(3), N)
+	str = fmt.Sprint(p)
+	if str != "x^3 + 2" {
+		t.Error(dumpBigIntPoly(p), str)
+	}
+
+	p = NewBigIntPoly(N, R)
+	p.Set(*big.NewInt(1), *big.NewInt(1), N)
+	str = fmt.Sprint(p)
+	if str != "x + 1" {
+		t.Error(dumpBigIntPoly(p), str)
+	}
+}
