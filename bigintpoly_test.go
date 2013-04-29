@@ -53,3 +53,25 @@ func TestNewBigIntPoly(t *testing.T) {
 		t.Error(dumpBigIntPoly(p))
 	}
 }
+
+// BigIntPoly.Set() should set the polynomial to X^(k % R) + (a % N).
+func TestBigIntPolySet(t *testing.T) {
+	a := *big.NewInt(12)
+	k := *big.NewInt(6)
+	N := *big.NewInt(10)
+	R := *big.NewInt(5)
+	p := NewBigIntPoly(N, R)
+	p.Set(a, k, N)
+	q := makeBigIntArray([]int64{2, 1, 0, 0, 0})
+	if !bigIntArraysEq(p.coeffs, q) {
+		t.Error(dumpBigIntPoly(p))
+	}
+
+	a = *big.NewInt(13)
+	k = *big.NewInt(7)
+	p.Set(a, k, N)
+	q = makeBigIntArray([]int64{3, 0, 1, 0, 0})
+	if !bigIntArraysEq(p.coeffs, q) {
+		t.Error(dumpBigIntPoly(p))
+	}
+}

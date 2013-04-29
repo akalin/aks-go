@@ -19,3 +19,15 @@ type BigIntPoly struct {
 func NewBigIntPoly(N, R big.Int) *BigIntPoly {
 	return &BigIntPoly{make([]big.Int, int(R.Int64()))}
 }
+
+// Sets p to X^k + a mod (N, X^R - 1).
+func (p *BigIntPoly) Set(a, k, N big.Int) {
+	R := len(p.coeffs)
+	p.coeffs[0].Mod(&a, &N)
+	for i := 1; i < R; i++ {
+		p.coeffs[i] = big.Int{}
+	}
+	var i big.Int
+	i.Mod(&k, big.NewInt(int64(R)))
+	p.coeffs[int(i.Int64())] = *big.NewInt(1)
+}
