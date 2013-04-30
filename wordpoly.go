@@ -65,7 +65,8 @@ func (p *WordPoly) mul(q *WordPoly, N Word, tmp *WordPoly) {
 			// TODO(akalin): Handle overflow here when we
 			// change Word to uintptr.
 			e := uint64(p.coeffs[i]) * uint64(q.coeffs[j])
-			e %= uint64(N)
+			// e <= (N - 1)^2 and tmp.coeffs[k] < (N - 1),
+			// so this won't overflow.
 			e += uint64(tmp.coeffs[k])
 			e %= uint64(N)
 			tmp.coeffs[k] = Word(e)
@@ -74,7 +75,6 @@ func (p *WordPoly) mul(q *WordPoly, N Word, tmp *WordPoly) {
 			k := j - (R - i)
 			// Duplicate of loop above.
 			e := uint64(p.coeffs[i]) * uint64(q.coeffs[j])
-			e %= uint64(N)
 			e += uint64(tmp.coeffs[k])
 			e %= uint64(N)
 			tmp.coeffs[k] = Word(e)
