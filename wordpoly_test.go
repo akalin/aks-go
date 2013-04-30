@@ -125,6 +125,21 @@ func TestWordPolyMul(t *testing.T) {
 	}
 }
 
+// Squaring should be modulo (N, X^R - 1).
+func TestWordPolySquare(t *testing.T) {
+	var N Word = 10
+	var R Word = 5
+
+	p := NewWordPoly(N, R)
+	p.Set(4, 3, N)
+	tmp := NewWordPoly(N, R)
+	p.square(N, tmp)
+	q := []Word{6, 1, 0, 8, 0}
+	if !wordArraysEq(p.coeffs, q) {
+		t.Error(dumpWordPoly(p))
+	}
+}
+
 // (X + a)^N should equal X^n + a mod (N, X^R - 1) for prime N.
 func TestWordPolyPow(t *testing.T) {
 	var a Word = 2

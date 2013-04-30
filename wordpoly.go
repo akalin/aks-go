@@ -84,6 +84,85 @@ func (p *WordPoly) mul(q *WordPoly, N Word, tmp *WordPoly) {
 	p.coeffs, tmp.coeffs = tmp.coeffs, p.coeffs
 }
 
+// Sets p to its square mod (N, X^R - 1). tmp must not alias p.
+func (p *WordPoly) square(N Word, tmp *WordPoly) {
+	R := len(tmp.coeffs)
+
+	// Optimized and unrolled version of the following loop:
+	//
+	//   for i < R {
+	//     tmp_{(2 * i) % R} = p_i^2
+	//   }
+	for i := 0; i <= R/2; i++ {
+		k := i << 1
+		// TODO(akalin): Handle overflow here when we
+		// change Word to uintptr.
+		e := uint64(p.coeffs[i])
+		e *= e
+		e %= uint64(N)
+		tmp.coeffs[k] = Word(e)
+	}
+	for i := R/2 + 1; i < R; i++ {
+		k := i - (R - i)
+		// Duplicate of loop above.
+		e := uint64(p.coeffs[i])
+		e *= e
+		e %= uint64(N)
+		tmp.coeffs[k] = Word(e)
+	}
+
+	// Optimized and unrolled version of the following loop:
+	//
+	//   for j < i < R {
+	//     tmp_{(i + j) % R} += (2 * p_i * p_j) % N
+	//   }
+	for i := 0; i <= R/2; i++ {
+		for j := 0; j < i; j++ {
+			k := i + j
+			// TODO(akalin): Handle overflow here when we
+			// change Word to uintptr.
+			e := uint64(p.coeffs[i]) * uint64(p.coeffs[j])
+			e %= uint64(N)
+			e <<= 1
+			e += uint64(tmp.coeffs[k])
+			// Taken at most twice and faster than a modulo
+			// operation.
+			for e > uint64(N) {
+				e -= uint64(N)
+			}
+			tmp.coeffs[k] = Word(e)
+		}
+	}
+	for i := R/2 + 1; i < R; i++ {
+		for j := 0; j < R-i; j++ {
+			k := i + j
+			// Duplicate of loop above.
+			e := uint64(p.coeffs[i]) * uint64(p.coeffs[j])
+			e %= uint64(N)
+			e <<= 1
+			e += uint64(tmp.coeffs[k])
+			for e > uint64(N) {
+				e -= uint64(N)
+			}
+			tmp.coeffs[k] = Word(e)
+		}
+		for j := R - i; j < i; j++ {
+			k := j - (R - i)
+			// Duplicate of loop above.
+			e := uint64(p.coeffs[i]) * uint64(p.coeffs[j])
+			e %= uint64(N)
+			e <<= 1
+			e += uint64(tmp.coeffs[k])
+			for e > uint64(N) {
+				e -= uint64(N)
+			}
+			tmp.coeffs[k] = Word(e)
+		}
+	}
+
+	p.coeffs, tmp.coeffs = tmp.coeffs, p.coeffs
+}
+
 // Sets p to p^N mod (N, X^R - 1), where R is the size of p. N must be
 // positive, and tmp1 and tmp2 must not alias each other or p.
 func (p *WordPoly) Pow(N Word, tmp1, tmp2 *WordPoly) {
@@ -98,7 +177,7 @@ func (p *WordPoly) Pow(N Word, tmp1, tmp2 *WordPoly) {
 	}
 
 	for i--; i >= 0; i-- {
-		tmp1.mul(tmp1, N, tmp2)
+		tmp1.square(N, tmp2)
 		if (N & (1 << uint(i))) != 0 {
 			tmp1.mul(p, N, tmp2)
 		}
