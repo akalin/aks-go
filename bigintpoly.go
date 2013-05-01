@@ -85,10 +85,20 @@ func (p *BigIntPoly) mul(
 	//     tmp1_{(i + j) % R} += (p_i * q_j)
 	//   }
 	for i := 0; i < R; i++ {
-		for j := 0; j < R; j++ {
-			k := (i + j) % R
+		for j := 0; j < R-i; j++ {
+			k := i + j
 			tmp2.Mul(&p.coeffs[i], &q.coeffs[j])
 			// Avoid copying when possible.
+			if tmp1.coeffs[k].Sign() == 0 {
+				tmp1.coeffs[k], *tmp2 = *tmp2, tmp1.coeffs[k]
+			} else if tmp2.Sign() != 0 {
+				tmp1.coeffs[k].Add(&tmp1.coeffs[k], tmp2)
+			}
+		}
+		for j := R - i; j < R; j++ {
+			k := j - (R - i)
+			// Duplicate of loop above.
+			tmp2.Mul(&p.coeffs[i], &q.coeffs[j])
 			if tmp1.coeffs[k].Sign() == 0 {
 				tmp1.coeffs[k], *tmp2 = *tmp2, tmp1.coeffs[k]
 			} else if tmp2.Sign() != 0 {
