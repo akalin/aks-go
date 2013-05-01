@@ -79,16 +79,16 @@ func (p *BigIntPoly) mul(
 		tmp1.coeffs[i].Set(&big.Int{})
 	}
 
+	// Optimized and unrolled version of the following loop:
+	//
+	//   for i, j < R {
+	//     tmp1_{(i + j) % R} += (p_i * q_j)
+	//   }
 	for i := 0; i < R; i++ {
 		for j := 0; j < R; j++ {
 			k := (i + j) % R
-			// Set tmp1.coeffs[k] to (tmp1.coeffs[k] +
-			// p.coeffs[i] * q.coeffs[j]) % N.
-
 			tmp2.Mul(&p.coeffs[i], &q.coeffs[j])
-
-			// Accumulate tmp2 into tmp1.coeffs[k],
-			// avoiding copying if possible.
+			// Avoid copying when possible.
 			if tmp1.coeffs[k].Sign() == 0 {
 				tmp1.coeffs[k], *tmp2 = *tmp2, tmp1.coeffs[k]
 			} else if tmp2.Sign() != 0 {
@@ -97,9 +97,12 @@ func (p *BigIntPoly) mul(
 		}
 	}
 
+	// Optimized and unrolled version of the following loop:
+	//
+	//   for i < R {
+	//     p_i = tmp1 % N
+	//   }
 	for i := 0; i < R; i++ {
-		// Set p.coeffs[i] to tmp1.coeffs[i] % N,
-		// avoiding copying if possible.
 		if tmp1.coeffs[i].Cmp(&N) < 0 {
 			tmp1.coeffs[i], p.coeffs[i] =
 				p.coeffs[i], tmp1.coeffs[i]
@@ -107,8 +110,7 @@ func (p *BigIntPoly) mul(
 			// Use big.Int.QuoRem() instead of
 			// big.Int.Mod() since the latter allocates an
 			// extra big.Int.
-			tmp1.coeffs[i].QuoRem(
-				&tmp1.coeffs[i], &N, &p.coeffs[i])
+			tmp1.coeffs[i].QuoRem(&tmp1.coeffs[i], &N, &p.coeffs[i])
 		}
 	}
 }
