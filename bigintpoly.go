@@ -13,26 +13,38 @@ type BigIntPoly struct {
 // Only polynomials built with the same value of N and R may be used
 // together in one of the functions below.
 
+// A coefficient can be up to R*(N - 1)^2 in intermediate
+// calculations.
+func getMaxCoefficient(N, R big.Int) big.Int {
+	var maxCoefficient big.Int
+	maxCoefficient.Sub(&N, big.NewInt(1))
+	maxCoefficient.Mul(&maxCoefficient, &maxCoefficient)
+	maxCoefficient.Mul(&maxCoefficient, &R)
+	return maxCoefficient
+}
+
 // Builds a new BigIntPoly representing the zero polynomial
 // mod (N, X^R - 1). R must fit into an int.
 func NewBigIntPoly(N, R big.Int) *BigIntPoly {
 	rInt := int(R.Int64())
 	p := BigIntPoly{make([]big.Int, rInt)}
 
-	// Pre-allocate space for each coefficient (which can be up to
-	// R*(N - 1)^2 in intermediate calculations). In order to take
+	// Pre-allocate space for each coefficient. In order to take
 	// advantage of this, we must not assign to entries of
 	// p.coeffs directly but instead use big.Int.Set().
-	var maxCoeff big.Int
-	maxCoeff.Sub(&N, big.NewInt(1))
-	maxCoeff.Mul(&maxCoeff, &maxCoeff)
-	maxCoeff.Mul(&maxCoeff, &R)
+	maxCoefficient := getMaxCoefficient(N, R)
 	for i := 0; i < rInt; i++ {
-		p.coeffs[i].Set(&maxCoeff)
+		p.coeffs[i].Set(&maxCoefficient)
 		p.coeffs[i].Set(&big.Int{})
 	}
 
 	return &p
+}
+
+// Returns a new big.Int suitable to be used as a temp variable for
+// BigIntPoly functions (e.g., BigIntPoly.mul()).
+func NewTempBigInt(N, R big.Int) big.Int {
+	return getMaxCoefficient(N, R)
 }
 
 // Sets p to X^k + a mod (N, X^R - 1).
@@ -60,7 +72,8 @@ func (p *BigIntPoly) Eq(q *BigIntPoly) bool {
 
 // Sets p to the product of p and q mod (N, X^R - 1). tmp1 and tmp2
 // must not alias each other or p or q.
-func (p *BigIntPoly) mul(q *BigIntPoly, N big.Int, tmp1, tmp2 *BigIntPoly) {
+func (p *BigIntPoly) mul(
+	q *BigIntPoly, N big.Int, tmp1 *BigIntPoly, tmp2 *big.Int) {
 	R := len(tmp1.coeffs)
 	for i := 0; i < R; i++ {
 		tmp1.coeffs[i].Set(&big.Int{})
@@ -72,16 +85,14 @@ func (p *BigIntPoly) mul(q *BigIntPoly, N big.Int, tmp1, tmp2 *BigIntPoly) {
 			// Set tmp1.coeffs[k] to (tmp1.coeffs[k] +
 			// p.coeffs[i] * q.coeffs[j]) % N.
 
-			tmp2.coeffs[k].Mul(&p.coeffs[i], &q.coeffs[j])
+			tmp2.Mul(&p.coeffs[i], &q.coeffs[j])
 
-			// Set tmp1.coeffs[k] to tmp2.coeffs[k] +
-			// tmp1.coeffs[k], avoid copying if possible.
+			// Accumulate tmp2 into tmp1.coeffs[k],
+			// avoiding copying if possible.
 			if tmp1.coeffs[k].Sign() == 0 {
-				tmp1.coeffs[k], tmp2.coeffs[k] =
-					tmp2.coeffs[k], tmp1.coeffs[k]
-			} else if tmp2.coeffs[k].Sign() != 0 {
-				tmp1.coeffs[k].Add(
-					&tmp1.coeffs[k], &tmp2.coeffs[k])
+				tmp1.coeffs[k], *tmp2 = *tmp2, tmp1.coeffs[k]
+			} else if tmp2.Sign() != 0 {
+				tmp1.coeffs[k].Add(&tmp1.coeffs[k], tmp2)
 			}
 		}
 	}
@@ -104,7 +115,7 @@ func (p *BigIntPoly) mul(q *BigIntPoly, N big.Int, tmp1, tmp2 *BigIntPoly) {
 
 // Sets p to p^N mod (N, X^R - 1), where R is the size of p. tmp1,
 // tmp2, and tmp3 must not alias each other or p.
-func (p *BigIntPoly) Pow(N big.Int, tmp1, tmp2, tmp3 *BigIntPoly) {
+func (p *BigIntPoly) Pow(N big.Int, tmp1, tmp2 *BigIntPoly, tmp3 *big.Int) {
 	R := len(p.coeffs)
 	for i := 0; i < R; i++ {
 		tmp1.coeffs[i].Set(&p.coeffs[i])

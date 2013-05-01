@@ -127,8 +127,8 @@ func TestBigIntPolyMul(t *testing.T) {
 	p := NewBigIntPoly(N, R)
 	p.Set(*big.NewInt(4), *big.NewInt(3), N)
 	tmp1 := NewBigIntPoly(N, R)
-	tmp2 := NewBigIntPoly(N, R)
-	p.mul(p, N, tmp1, tmp2)
+	tmp2 := NewTempBigInt(N, R)
+	p.mul(p, N, tmp1, &tmp2)
 	q := makeBigIntArray([]int64{6, 1, 0, 8, 0})
 	if !bigIntArraysEq(p.coeffs, q) {
 		t.Error(dumpBigIntPoly(p))
@@ -145,8 +145,8 @@ func TestBigIntPolyPow(t *testing.T) {
 	p.Set(a, *big.NewInt(1), N)
 	tmp1 := NewBigIntPoly(N, R)
 	tmp2 := NewBigIntPoly(N, R)
-	tmp3 := NewBigIntPoly(N, R)
-	p.Pow(N, tmp1, tmp2, tmp3)
+	tmp3 := NewTempBigInt(N, R)
+	p.Pow(N, tmp1, tmp2, &tmp3)
 	q := NewBigIntPoly(N, R)
 	q.Set(a, N, N)
 	if !bigIntArraysEq(p.coeffs, q.coeffs) {
