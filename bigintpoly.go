@@ -143,6 +143,7 @@ func (p *BigIntPoly) Pow(N big.Int, tmp1, tmp2 *BigIntPoly, tmp3 *big.Int) {
 			tmp1.mul(p, N, tmp2, tmp3)
 		}
 	}
+
 	p.coeffs, tmp1.coeffs = tmp1.coeffs, p.coeffs
 }
 

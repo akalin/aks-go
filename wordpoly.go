@@ -200,6 +200,7 @@ func (p *WordPoly) Pow(N Word, tmp1, tmp2 *WordPoly) {
 			tmp1.mul(p, N, tmp2)
 		}
 	}
+
 	p.coeffs, tmp1.coeffs = tmp1.coeffs, p.coeffs
 }
 
