@@ -77,7 +77,7 @@ func (p *WordPoly) mul(q *WordPoly, N Word, tmp *WordPoly) {
 		}
 		for j := R - i; j < R; j++ {
 			k := j - (R - i)
-			// Duplicate of loop above.
+			// Duplicate of loop body above.
 			e := uint64(p.coeffs[i]) * uint64(q.coeffs[j])
 			e += uint64(tmp.coeffs[k])
 			if e >= nUint64 {
@@ -114,7 +114,7 @@ func (p *WordPoly) square(N Word, tmp *WordPoly) {
 	}
 	for i := R/2 + 1; i < R; i++ {
 		k := i - (R - i)
-		// Duplicate of loop above.
+		// Duplicate of loop body above.
 		e := uint64(p.coeffs[i])
 		e *= e
 		if e >= nUint64 {
@@ -150,7 +150,7 @@ func (p *WordPoly) square(N Word, tmp *WordPoly) {
 	for i := R/2 + 1; i < R; i++ {
 		for j := 0; j < R-i; j++ {
 			k := i + j
-			// Duplicate of loop above.
+			// Duplicate of loop body above.
 			e := uint64(p.coeffs[i]) * uint64(p.coeffs[j])
 			if e >= nUint64 {
 				e %= nUint64
@@ -164,7 +164,7 @@ func (p *WordPoly) square(N Word, tmp *WordPoly) {
 		}
 		for j := R - i; j < i; j++ {
 			k := j - (R - i)
-			// Duplicate of loop above.
+			// Duplicate of loop body above.
 			e := uint64(p.coeffs[i]) * uint64(p.coeffs[j])
 			if e >= nUint64 {
 				e %= nUint64

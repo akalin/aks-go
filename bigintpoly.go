@@ -97,7 +97,7 @@ func (p *BigIntPoly) mul(
 		}
 		for j := R - i; j < R; j++ {
 			k := j - (R - i)
-			// Duplicate of loop above.
+			// Duplicate of loop body above.
 			tmp2.Mul(&p.coeffs[i], &q.coeffs[j])
 			if tmp1.coeffs[k].Sign() == 0 {
 				tmp1.coeffs[k], *tmp2 = *tmp2, tmp1.coeffs[k]
@@ -145,7 +145,7 @@ func (p *BigIntPoly) square(N big.Int, tmp1 *BigIntPoly, tmp2 *big.Int) {
 	}
 	for i := R/2 + 1; i < R; i++ {
 		k := i - (R - i)
-		// Duplicate of loop above.
+		// Duplicate of loop body above.
 		tmp1.coeffs[k].Mul(&p.coeffs[i], &p.coeffs[i])
 	}
 
@@ -170,7 +170,7 @@ func (p *BigIntPoly) square(N big.Int, tmp1 *BigIntPoly, tmp2 *big.Int) {
 	for i := R/2 + 1; i < R; i++ {
 		for j := 0; j < R-i; j++ {
 			k := i + j
-			// Duplicate of loop above.
+			// Duplicate of loop body above.
 			tmp2.Mul(&p.coeffs[i], &p.coeffs[j])
 			tmp2.Lsh(tmp2, 1)
 			if tmp1.coeffs[k].Sign() == 0 {
@@ -181,7 +181,7 @@ func (p *BigIntPoly) square(N big.Int, tmp1 *BigIntPoly, tmp2 *big.Int) {
 		}
 		for j := R - i; j < i; j++ {
 			k := j - (R - i)
-			// Duplicate of loop above.
+			// Duplicate of loop body above.
 			tmp2.Mul(&p.coeffs[i], &p.coeffs[j])
 			tmp2.Lsh(tmp2, 1)
 			if tmp1.coeffs[k].Sign() == 0 {
