@@ -68,7 +68,9 @@ func (p *WordPoly) mul(q *WordPoly, N Word, tmp *WordPoly) {
 			// e <= (N - 1)^2 and tmp.coeffs[k] < (N - 1),
 			// so this won't overflow.
 			e += uint64(tmp.coeffs[k])
-			e %= uint64(N)
+			if e >= uint64(N) {
+				e %= uint64(N)
+			}
 			tmp.coeffs[k] = Word(e)
 		}
 		for j := R - i; j < R; j++ {
@@ -76,7 +78,9 @@ func (p *WordPoly) mul(q *WordPoly, N Word, tmp *WordPoly) {
 			// Duplicate of loop above.
 			e := uint64(p.coeffs[i]) * uint64(q.coeffs[j])
 			e += uint64(tmp.coeffs[k])
-			e %= uint64(N)
+			if e >= uint64(N) {
+				e %= uint64(N)
+			}
 			tmp.coeffs[k] = Word(e)
 		}
 	}
@@ -99,7 +103,9 @@ func (p *WordPoly) square(N Word, tmp *WordPoly) {
 		// change Word to uintptr.
 		e := uint64(p.coeffs[i])
 		e *= e
-		e %= uint64(N)
+		if e >= uint64(N) {
+			e %= uint64(N)
+		}
 		tmp.coeffs[k] = Word(e)
 	}
 	for i := R/2 + 1; i < R; i++ {
@@ -107,7 +113,9 @@ func (p *WordPoly) square(N Word, tmp *WordPoly) {
 		// Duplicate of loop above.
 		e := uint64(p.coeffs[i])
 		e *= e
-		e %= uint64(N)
+		if e >= uint64(N) {
+			e %= uint64(N)
+		}
 		tmp.coeffs[k] = Word(e)
 	}
 
@@ -122,7 +130,9 @@ func (p *WordPoly) square(N Word, tmp *WordPoly) {
 			// TODO(akalin): Handle overflow here when we
 			// change Word to uintptr.
 			e := uint64(p.coeffs[i]) * uint64(p.coeffs[j])
-			e %= uint64(N)
+			if e >= uint64(N) {
+				e %= uint64(N)
+			}
 			e <<= 1
 			e += uint64(tmp.coeffs[k])
 			// Taken at most twice and faster than a modulo
@@ -138,7 +148,9 @@ func (p *WordPoly) square(N Word, tmp *WordPoly) {
 			k := i + j
 			// Duplicate of loop above.
 			e := uint64(p.coeffs[i]) * uint64(p.coeffs[j])
-			e %= uint64(N)
+			if e >= uint64(N) {
+				e %= uint64(N)
+			}
 			e <<= 1
 			e += uint64(tmp.coeffs[k])
 			for e > uint64(N) {
@@ -150,7 +162,9 @@ func (p *WordPoly) square(N Word, tmp *WordPoly) {
 			k := j - (R - i)
 			// Duplicate of loop above.
 			e := uint64(p.coeffs[i]) * uint64(p.coeffs[j])
-			e %= uint64(N)
+			if e >= uint64(N) {
+				e %= uint64(N)
+			}
 			e <<= 1
 			e += uint64(tmp.coeffs[k])
 			for e > uint64(N) {
