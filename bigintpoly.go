@@ -100,19 +100,23 @@ func (p *BigIntPoly) mul(
 	// Optimized and unrolled version of the following loop:
 	//
 	//   for i < R {
-	//     p_i = tmp1 % N
+	//     tmp1 %= N
 	//   }
 	for i := 0; i < R; i++ {
-		if tmp1.coeffs[i].Cmp(&N) < 0 {
-			tmp1.coeffs[i], p.coeffs[i] =
-				p.coeffs[i], tmp1.coeffs[i]
-		} else {
+		switch tmp1.coeffs[i].Cmp(&N) {
+		case -1:
+			break
+		case 0:
+			tmp1.coeffs[i].Set(&big.Int{})
+		case 1:
 			// Use big.Int.QuoRem() instead of
 			// big.Int.Mod() since the latter allocates an
 			// extra big.Int.
-			tmp1.coeffs[i].QuoRem(&tmp1.coeffs[i], &N, &p.coeffs[i])
+			tmp2.QuoRem(&tmp1.coeffs[i], &N, &tmp1.coeffs[i])
 		}
 	}
+
+	p.coeffs, tmp1.coeffs = tmp1.coeffs, p.coeffs
 }
 
 // Sets p to p^N mod (N, X^R - 1), where R is the size of p. tmp1,
