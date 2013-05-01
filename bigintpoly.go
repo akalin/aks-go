@@ -19,13 +19,16 @@ func NewBigIntPoly(N, R big.Int) *BigIntPoly {
 	rInt := int(R.Int64())
 	p := BigIntPoly{make([]big.Int, rInt)}
 
-	// Pre-allocate space for each coefficient. In order to take
+	// Pre-allocate space for each coefficient (which can be up to
+	// R*(N - 1)^2 in intermediate calculations). In order to take
 	// advantage of this, we must not assign to entries of
 	// p.coeffs directly but instead use big.Int.Set().
-	var nSq big.Int
-	nSq.Mul(&N, &N)
+	var maxCoeff big.Int
+	maxCoeff.Sub(&N, big.NewInt(1))
+	maxCoeff.Mul(&maxCoeff, &maxCoeff)
+	maxCoeff.Mul(&maxCoeff, &R)
 	for i := 0; i < rInt; i++ {
-		p.coeffs[i].Set(&nSq)
+		p.coeffs[i].Set(&maxCoeff)
 		p.coeffs[i].Set(&big.Int{})
 	}
 
@@ -71,31 +74,32 @@ func (p *BigIntPoly) mul(q *BigIntPoly, N big.Int, tmp1, tmp2 *BigIntPoly) {
 
 			tmp2.coeffs[k].Mul(&p.coeffs[i], &q.coeffs[j])
 
-			// Set tmp2.coeffs[k] to tmp2.coeffs[k] +
+			// Set tmp1.coeffs[k] to tmp2.coeffs[k] +
 			// tmp1.coeffs[k], avoid copying if possible.
-			if tmp2.coeffs[k].Sign() == 0 {
-				tmp2.coeffs[k], tmp1.coeffs[k] =
-					tmp1.coeffs[k], tmp2.coeffs[k]
-			} else if tmp1.coeffs[k].Sign() != 0 {
-				tmp2.coeffs[k].Add(
-					&tmp2.coeffs[k], &tmp1.coeffs[k])
-			}
-
-			// Set tmp1.coeffs[k] to tmp2.coeffs[k] % N,
-			// avoiding copying if possible.
-			if tmp2.coeffs[k].Cmp(&N) < 0 {
-				tmp2.coeffs[k], tmp1.coeffs[k] =
-					tmp1.coeffs[k], tmp2.coeffs[k]
-			} else {
-				// Use big.Int.QuoRem() instead of
-				// big.Int.Mod() since the latter allocates an
-				// extra big.Int.
-				tmp2.coeffs[k].QuoRem(
-					&tmp2.coeffs[k], &N, &tmp1.coeffs[k])
+			if tmp1.coeffs[k].Sign() == 0 {
+				tmp1.coeffs[k], tmp2.coeffs[k] =
+					tmp2.coeffs[k], tmp1.coeffs[k]
+			} else if tmp2.coeffs[k].Sign() != 0 {
+				tmp1.coeffs[k].Add(
+					&tmp1.coeffs[k], &tmp2.coeffs[k])
 			}
 		}
 	}
-	p.coeffs, tmp1.coeffs = tmp1.coeffs, p.coeffs
+
+	for i := 0; i < R; i++ {
+		// Set p.coeffs[i] to tmp1.coeffs[i] % N,
+		// avoiding copying if possible.
+		if tmp1.coeffs[i].Cmp(&N) < 0 {
+			tmp1.coeffs[i], p.coeffs[i] =
+				p.coeffs[i], tmp1.coeffs[i]
+		} else {
+			// Use big.Int.QuoRem() instead of
+			// big.Int.Mod() since the latter allocates an
+			// extra big.Int.
+			tmp1.coeffs[i].QuoRem(
+				&tmp1.coeffs[i], &N, &p.coeffs[i])
+		}
+	}
 }
 
 // Sets p to p^N mod (N, X^R - 1), where R is the size of p. tmp1,
