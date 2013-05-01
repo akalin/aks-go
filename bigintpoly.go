@@ -129,6 +129,87 @@ func (p *BigIntPoly) mul(
 	p.coeffs, tmp1.coeffs = tmp1.coeffs, p.coeffs
 }
 
+// Sets p to its square mod (N, X^R - 1). tmp1 and tmp2 must not alias
+// each other or p.
+func (p *BigIntPoly) square(N big.Int, tmp1 *BigIntPoly, tmp2 *big.Int) {
+	R := len(tmp1.coeffs)
+
+	// Optimized and unrolled version of the following loop:
+	//
+	//   for i < R {
+	//     tmp1_{(2 * i) % R} = p_i^2
+	//   }
+	for i := 0; i <= R/2; i++ {
+		k := i << 1
+		tmp1.coeffs[k].Mul(&p.coeffs[i], &p.coeffs[i])
+	}
+	for i := R/2 + 1; i < R; i++ {
+		k := i - (R - i)
+		// Duplicate of loop above.
+		tmp1.coeffs[k].Mul(&p.coeffs[i], &p.coeffs[i])
+	}
+
+	// Optimized and unrolled version of the following loop:
+	//
+	//   for j < i < R {
+	//     tmp_{(i + j) % R} += (2 * p_i * p_j) % N
+	//   }
+	for i := 0; i <= R/2; i++ {
+		for j := 0; j < i; j++ {
+			k := i + j
+			tmp2.Mul(&p.coeffs[i], &p.coeffs[j])
+			tmp2.Lsh(tmp2, 1)
+			// Avoid copying when possible.
+			if tmp1.coeffs[k].Sign() == 0 {
+				tmp1.coeffs[k], *tmp2 = *tmp2, tmp1.coeffs[k]
+			} else if tmp2.Sign() != 0 {
+				tmp1.coeffs[k].Add(&tmp1.coeffs[k], tmp2)
+			}
+		}
+	}
+	for i := R/2 + 1; i < R; i++ {
+		for j := 0; j < R-i; j++ {
+			k := i + j
+			// Duplicate of loop above.
+			tmp2.Mul(&p.coeffs[i], &p.coeffs[j])
+			tmp2.Lsh(tmp2, 1)
+			if tmp1.coeffs[k].Sign() == 0 {
+				tmp1.coeffs[k], *tmp2 = *tmp2, tmp1.coeffs[k]
+			} else if tmp2.Sign() != 0 {
+				tmp1.coeffs[k].Add(&tmp1.coeffs[k], tmp2)
+			}
+		}
+		for j := R - i; j < i; j++ {
+			k := j - (R - i)
+			// Duplicate of loop above.
+			tmp2.Mul(&p.coeffs[i], &p.coeffs[j])
+			tmp2.Lsh(tmp2, 1)
+			if tmp1.coeffs[k].Sign() == 0 {
+				tmp1.coeffs[k], *tmp2 = *tmp2, tmp1.coeffs[k]
+			} else if tmp2.Sign() != 0 {
+				tmp1.coeffs[k].Add(&tmp1.coeffs[k], tmp2)
+			}
+		}
+	}
+
+	// Duplicate of final loop in mul().
+	for i := 0; i < R; i++ {
+		switch tmp1.coeffs[i].Cmp(&N) {
+		case -1:
+			break
+		case 0:
+			tmp1.coeffs[i].Set(&big.Int{})
+		case 1:
+			// Use big.Int.QuoRem() instead of
+			// big.Int.Mod() since the latter allocates an
+			// extra big.Int.
+			tmp2.QuoRem(&tmp1.coeffs[i], &N, &tmp1.coeffs[i])
+		}
+	}
+
+	p.coeffs, tmp1.coeffs = tmp1.coeffs, p.coeffs
+}
+
 // Sets p to p^N mod (N, X^R - 1), where R is the size of p. tmp1,
 // tmp2, and tmp3 must not alias each other or p.
 func (p *BigIntPoly) Pow(N big.Int, tmp1, tmp2 *BigIntPoly, tmp3 *big.Int) {
@@ -138,7 +219,7 @@ func (p *BigIntPoly) Pow(N big.Int, tmp1, tmp2 *BigIntPoly, tmp3 *big.Int) {
 	}
 
 	for i := N.BitLen() - 2; i >= 0; i-- {
-		tmp1.mul(tmp1, N, tmp2, tmp3)
+		tmp1.square(N, tmp2, tmp3)
 		if N.Bit(i) != 0 {
 			tmp1.mul(p, N, tmp2, tmp3)
 		}

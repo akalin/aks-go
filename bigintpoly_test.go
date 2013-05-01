@@ -135,6 +135,22 @@ func TestBigIntPolyMul(t *testing.T) {
 	}
 }
 
+// Squaring should be modulo (N, X^R - 1).
+func TestBigIntPolySquare(t *testing.T) {
+	N := *big.NewInt(10)
+	R := *big.NewInt(5)
+
+	p := NewBigIntPoly(N, R)
+	p.Set(*big.NewInt(4), *big.NewInt(3), N)
+	tmp1 := NewBigIntPoly(N, R)
+	tmp2 := NewTempBigInt(N, R)
+	p.square(N, tmp1, &tmp2)
+	q := makeBigIntArray([]int64{6, 1, 0, 8, 0})
+	if !bigIntArraysEq(p.coeffs, q) {
+		t.Error(dumpBigIntPoly(p))
+	}
+}
+
 // (X + a)^N should equal X^n + a mod (N, X^R - 1) for prime N.
 func TestBigIntPolyPow(t *testing.T) {
 	a := *big.NewInt(2)
