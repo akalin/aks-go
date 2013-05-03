@@ -1,5 +1,6 @@
 package main
 
+import "fmt"
 import "math/big"
 
 const (
@@ -142,4 +143,38 @@ func (p *BigIntPoly2) Pow(N big.Int, tmp1, tmp2 *BigIntPoly2) {
 	}
 
 	p.phi, tmp1.phi = tmp1.phi, p.phi
+}
+
+// fmt.Formatter implementation.
+func (p *BigIntPoly2) Format(f fmt.State, c rune) {
+	if p.phi.Sign() == 0 {
+		fmt.Fprint(f, "0")
+		return
+	}
+
+	// Formats coeff*x^deg.
+	formatNonZeroMonomial := func(
+		f fmt.State, c rune,
+		coeff big.Int, deg int) {
+		if coeff.Cmp(big.NewInt(1)) != 0 || deg == 0 {
+			fmt.Fprint(f, &coeff)
+		}
+		if deg != 0 {
+			fmt.Fprint(f, "x")
+			if deg > 1 {
+				fmt.Fprint(f, "^", deg)
+			}
+		}
+	}
+
+	i := p.getCoefficientCount() - 1
+	formatNonZeroMonomial(f, c, p.getCoefficient(i), i)
+
+	for i--; i >= 0; i-- {
+		coeff := p.getCoefficient(i)
+		if coeff.Sign() != 0 {
+			fmt.Fprint(f, " + ")
+			formatNonZeroMonomial(f, c, coeff, i)
+		}
+	}
 }
