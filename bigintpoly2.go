@@ -91,3 +91,8 @@ func (p *BigIntPoly2) Set(a, k, N big.Int) {
 	aModN.Mod(&a, &N)
 	p.phi.Add(&p.phi, &aModN)
 }
+
+// Returns whether p has the same coefficients as q.
+func (p *BigIntPoly2) Eq(q *BigIntPoly2) bool {
+	return p.phi.Cmp(&q.phi) == 0
+}
