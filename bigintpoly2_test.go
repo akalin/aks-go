@@ -127,3 +127,21 @@ func TestBigIntPoly2Mul(t *testing.T) {
 		t.Error(dumpBigIntPoly2(p))
 	}
 }
+
+// (X + a)^N should equal X^n + a mod (N, X^R - 1) for prime N.
+func TestBigIntPoly2Pow(t *testing.T) {
+	a := *big.NewInt(2)
+	N := *big.NewInt(101)
+	R := *big.NewInt(53)
+
+	p := NewBigIntPoly2(N, R)
+	p.Set(a, *big.NewInt(1), N)
+	tmp1 := NewBigIntPoly2(N, R)
+	tmp2 := NewBigIntPoly2(N, R)
+	p.Pow(N, tmp1, tmp2)
+	q := NewBigIntPoly2(N, R)
+	q.Set(a, N, N)
+	if p.phi.Cmp(&q.phi) != 0 {
+		t.Error(dumpBigIntPoly2(p), dumpBigIntPoly2(q))
+	}
+}

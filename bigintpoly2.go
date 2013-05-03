@@ -128,3 +128,18 @@ func (p *BigIntPoly2) mul(q *BigIntPoly2, N big.Int, tmp *BigIntPoly2) {
 		}
 	}
 }
+
+// Sets p to p^N mod (N, X^R - 1), where R is the size of p. tmp1 and
+// tmp2 must not alias each other or p.
+func (p *BigIntPoly2) Pow(N big.Int, tmp1, tmp2 *BigIntPoly2) {
+	tmp1.phi.Set(&p.phi)
+
+	for i := N.BitLen() - 2; i >= 0; i-- {
+		tmp1.mul(tmp1, N, tmp2)
+		if N.Bit(i) != 0 {
+			tmp1.mul(p, N, tmp2)
+		}
+	}
+
+	p.phi, tmp1.phi = tmp1.phi, p.phi
+}
