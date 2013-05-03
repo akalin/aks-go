@@ -21,61 +21,16 @@ func isAKSWitness(n, a big.Int, tmp1, tmp2, tmp3 *BigIntPoly2) bool {
 	return isWitness
 }
 
-// Returns whether (X + a)^n = X^n + a mod (n, X^r - 1) given that n
-// fits into a Word. tmp1, tmp2, and tmp3 must be WordPoly objects
-// constructed with N, R = n, r, and they must not alias each other.
-func isAKSWitnessWord(n, a Word, tmp1, tmp2, tmp3 *WordPoly) bool {
-	// Left-hand side: (X + a)^n mod (n, X^r - 1).
-	tmp1.Set(a, 1, n)
-	tmp1.Pow(n, tmp2, tmp3)
-
-	// Right-hand side: (X^n + a) mod (n, X^r - 1).
-	tmp2.Set(a, n, n)
-
-	isWitness := !tmp1.Eq(tmp2)
-	return isWitness
-}
-
-// Returns a big.Int one plus the largest representable number that
-// fits in a Word.
-func calculateAKSWitnessWordThreshold() *big.Int {
-	threshold := big.NewInt(1)
-	threshold.Lsh(threshold, WORD_BITS)
-	return threshold
-}
-
-var isAKSWitnessWordThreshold *big.Int = calculateAKSWitnessWordThreshold()
-
 // Returns the first AKS witness of n with the parameters r and M, or
 // nil if there isn't one.
 func getFirstAKSWitness(n, r, M *big.Int, logger *log.Logger) *big.Int {
-	var nWord Word
-	var wordTmp1, wordTmp2, wordTmp3 *WordPoly
-	var tmp1, tmp2, tmp3 *BigIntPoly2
-	useWordFunctions := (n.Cmp(isAKSWitnessWordThreshold) < 0)
-	if useWordFunctions {
-		nWord = Word(n.Int64())
-		rWord := Word(r.Int64())
-		wordTmp1 = NewWordPoly(nWord, rWord)
-		wordTmp2 = NewWordPoly(nWord, rWord)
-		wordTmp3 = NewWordPoly(nWord, rWord)
-	} else {
-		tmp1 = NewBigIntPoly2(*n, *r)
-		tmp2 = NewBigIntPoly2(*n, *r)
-		tmp3 = NewBigIntPoly2(*n, *r)
-	}
+	tmp1 := NewBigIntPoly2(*n, *r)
+	tmp2 := NewBigIntPoly2(*n, *r)
+	tmp3 := NewBigIntPoly2(*n, *r)
 
 	for a := big.NewInt(1); a.Cmp(M) < 0; a.Add(a, big.NewInt(1)) {
 		logger.Printf("Testing %v (M = %v)...\n", a, M)
-		var isWitness bool
-		if useWordFunctions {
-			aWord := Word(a.Int64())
-			isWitness = isAKSWitnessWord(
-				nWord, aWord, wordTmp1, wordTmp2, wordTmp3)
-		} else {
-			isWitness =
-				isAKSWitness(*n, *a, tmp1, tmp2, tmp3)
-		}
+		isWitness := isAKSWitness(*n, *a, tmp1, tmp2, tmp3)
 		if isWitness {
 			return a
 		}
@@ -96,33 +51,13 @@ func testAKSWitnesses(
 	numberCh chan *big.Int,
 	resultCh chan witnessResult,
 	logger *log.Logger) {
-	var nWord Word
-	var wordTmp1, wordTmp2, wordTmp3 *WordPoly
-	var tmp1, tmp2, tmp3 *BigIntPoly2
-	useWordFunctions := (n.Cmp(isAKSWitnessWordThreshold) < 0)
-	if useWordFunctions {
-		nWord = Word(n.Int64())
-		rWord := Word(r.Int64())
-		wordTmp1 = NewWordPoly(nWord, rWord)
-		wordTmp2 = NewWordPoly(nWord, rWord)
-		wordTmp3 = NewWordPoly(nWord, rWord)
-	} else {
-		tmp1 = NewBigIntPoly2(*n, *r)
-		tmp2 = NewBigIntPoly2(*n, *r)
-		tmp3 = NewBigIntPoly2(*n, *r)
-	}
+	tmp1 := NewBigIntPoly2(*n, *r)
+	tmp2 := NewBigIntPoly2(*n, *r)
+	tmp3 := NewBigIntPoly2(*n, *r)
 
 	for a := range numberCh {
 		logger.Printf("Testing %v...\n", a)
-		var isWitness bool
-		if useWordFunctions {
-			aWord := Word(a.Int64())
-			isWitness = isAKSWitnessWord(
-				nWord, aWord, wordTmp1, wordTmp2, wordTmp3)
-		} else {
-			isWitness =
-				isAKSWitness(*n, *a, tmp1, tmp2, tmp3)
-		}
+		isWitness := isAKSWitness(*n, *a, tmp1, tmp2, tmp3)
 		logger.Printf("Finished testing %v (isWitness=%t)\n",
 			a, isWitness)
 		resultCh <- witnessResult{a, isWitness}
