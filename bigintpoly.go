@@ -16,6 +16,12 @@ type BigIntPoly struct {
 	// p(2^{k*bitsize(big.Word)}). Since a coefficient fits into k
 	// big.Words, this is a lossless transformation; that is, one
 	// can recover all coefficients of p(x) from phi.
+	//
+	// phi is set to have capacity for the largest possible
+	// (intermediate) polynomial. No assumptions can be made about
+	// the bytes in the unused capacity except for that the unused
+	// bytes for the leading coefficient (if any) is guaranteed to
+	// be zeroed out.
 	phi big.Int
 }
 
@@ -68,19 +74,17 @@ func (p *BigIntPoly) setCoefficientCount(coefficientCount int) {
 func (p *BigIntPoly) getCoefficient(i int) big.Int {
 	var c big.Int
 	start := i * p.k
-	if i == p.getCoefficientCount()-1 {
-		// If the last coefficient is small enough, phi might
-		// have fewer than p.R * p.k words.
-		c.SetBits(p.phi.Bits()[start:])
-	} else {
-		end := (i + 1) * p.k
-		c.SetBits(p.phi.Bits()[start:end])
-	}
+	end := (i + 1) * p.k
+	// Since the unused data for the leading coefficient is
+	// guaranteed to be zeroed out, this is okay.
+	c.SetBits(p.phi.Bits()[start:end])
 	return c
 }
 
-// Must be called after all changes have been made to a coefficient
-// via a big.Int returned from p.getCoefficient().
+// Clears the unused bytes of the given coefficient. Must be called
+// after all changes have been made to a coefficient via a big.Int
+// returned from p.getCoefficient(). Also must be called on the
+// leading coefficient before p.setCoefficientCount() is called.
 func (p *BigIntPoly) commitCoefficient(c big.Int) {
 	cBits := c.Bits()
 	unusedBits := cBits[len(cBits):p.k]
@@ -132,13 +136,30 @@ func (p *BigIntPoly) mul(q *BigIntPoly, N big.Int, tmp *BigIntPoly) {
 		lo.SetBits(pBits[:mid])
 		hi.SetBits(pBits[mid:])
 		p.phi.Add(&lo, &hi)
+		pBits = p.phi.Bits()
+	}
+
+	// Clear the unused bits of the leading coefficient if
+	// necessary.
+	if len(pBits)%p.k != 0 {
+		start := len(pBits)
+		end := start + p.k - start%p.k
+		unusedBits := pBits[start:end]
+		for i := 0; i < len(unusedBits); i++ {
+			unusedBits[i] = 0
+		}
+	}
+	// Commit the leading coefficient before we access it.
+	oldCoefficientCount := p.getCoefficientCount()
+	if oldCoefficientCount > 0 {
+		p.commitCoefficient(p.getCoefficient(oldCoefficientCount - 1))
 	}
 
 	// Mod p by N.
 	newCoefficientCount := 0
 	tmp2 := tmp.getCoefficient(0)
 	tmp3 := tmp.getCoefficient(1)
-	for i := 0; i < p.getCoefficientCount(); i++ {
+	for i := 0; i < oldCoefficientCount; i++ {
 		c := p.getCoefficient(i)
 		if c.Cmp(&N) >= 0 {
 			// Mod c by N. Use big.Int.QuoRem() instead of
@@ -151,9 +172,6 @@ func (p *BigIntPoly) mul(q *BigIntPoly, N big.Int, tmp *BigIntPoly) {
 		if c.Sign() != 0 {
 			newCoefficientCount = i + 1
 		}
-	}
-	if newCoefficientCount > 0 {
-		p.commitCoefficient(p.getCoefficient(newCoefficientCount - 1))
 	}
 	p.setCoefficientCount(newCoefficientCount)
 }
