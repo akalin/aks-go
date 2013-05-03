@@ -11,11 +11,11 @@ const (
 	_BIG_WORD_BITS = _S << 3
 )
 
-// A BigIntPoly2 represents a polynomial with big.Int coefficients mod
+// A BigIntPoly represents a polynomial with big.Int coefficients mod
 // some (N, X^R - 1).
 //
 // The zero value for a BigIntPoly represents the zero polynomial.
-type BigIntPoly2 struct {
+type BigIntPoly struct {
 	R int
 	// k is the number of big.Words required to hold a coefficient
 	// in calculations without overflowing.
@@ -32,7 +32,7 @@ type BigIntPoly2 struct {
 
 // Builds a new BigIntPoly representing the zero polynomial
 // mod (N, X^R - 1). R must fit into an int.
-func NewBigIntPoly2(N, R big.Int) *BigIntPoly2 {
+func NewBigIntPoly(N, R big.Int) *BigIntPoly {
 	// A coefficient can be up to R*(N - 1)^2 in intermediate
 	// calculations.
 	var maxCoefficient big.Int
@@ -47,12 +47,12 @@ func NewBigIntPoly2(N, R big.Int) *BigIntPoly2 {
 	// calculations.
 	maxWordCount := 2 * rInt * k
 	phi.SetBits(make([]big.Word, maxWordCount))
-	return &BigIntPoly2{rInt, k, phi}
+	return &BigIntPoly{rInt, k, phi}
 }
 
 // Returns 1 + the degree of this polynomial, or 0 if the polynomial
 // is the zero polynomial.
-func (p *BigIntPoly2) getCoefficientCount() int {
+func (p *BigIntPoly) getCoefficientCount() int {
 	l := len(p.phi.Bits())
 	if l == 0 {
 		return 0
@@ -66,7 +66,7 @@ func (p *BigIntPoly2) getCoefficientCount() int {
 
 // Returns the ith coefficient of this polynomial. i must be less than
 // p.getCoefficientCount().
-func (p *BigIntPoly2) getCoefficient(i int) big.Int {
+func (p *BigIntPoly) getCoefficient(i int) big.Int {
 	var c big.Int
 	start := i * p.k
 	if i == p.getCoefficientCount()-1 {
@@ -81,7 +81,7 @@ func (p *BigIntPoly2) getCoefficient(i int) big.Int {
 }
 
 // Sets p to X^k + a mod (N, X^R - 1).
-func (p *BigIntPoly2) Set(a, k, N big.Int) {
+func (p *BigIntPoly) Set(a, k, N big.Int) {
 	R := big.NewInt(int64(p.R))
 	var kModR big.Int
 	kModR.Mod(&k, R)
@@ -94,13 +94,13 @@ func (p *BigIntPoly2) Set(a, k, N big.Int) {
 }
 
 // Returns whether p has the same coefficients as q.
-func (p *BigIntPoly2) Eq(q *BigIntPoly2) bool {
+func (p *BigIntPoly) Eq(q *BigIntPoly) bool {
 	return p.phi.Cmp(&q.phi) == 0
 }
 
 // Sets p to the product of p and q mod (N, X^R - 1). tmp must not
 // alias p or q.
-func (p *BigIntPoly2) mul(q *BigIntPoly2, N big.Int, tmp *BigIntPoly2) {
+func (p *BigIntPoly) mul(q *BigIntPoly, N big.Int, tmp *BigIntPoly) {
 	tmp.phi.Mul(&p.phi, &q.phi)
 
 	// Mod tmp by X^R - 1.
@@ -132,7 +132,7 @@ func (p *BigIntPoly2) mul(q *BigIntPoly2, N big.Int, tmp *BigIntPoly2) {
 
 // Sets p to p^N mod (N, X^R - 1), where R is the size of p. tmp1 and
 // tmp2 must not alias each other or p.
-func (p *BigIntPoly2) Pow(N big.Int, tmp1, tmp2 *BigIntPoly2) {
+func (p *BigIntPoly) Pow(N big.Int, tmp1, tmp2 *BigIntPoly) {
 	tmp1.phi.Set(&p.phi)
 
 	for i := N.BitLen() - 2; i >= 0; i-- {
@@ -146,7 +146,7 @@ func (p *BigIntPoly2) Pow(N big.Int, tmp1, tmp2 *BigIntPoly2) {
 }
 
 // fmt.Formatter implementation.
-func (p *BigIntPoly2) Format(f fmt.State, c rune) {
+func (p *BigIntPoly) Format(f fmt.State, c rune) {
 	if p.phi.Sign() == 0 {
 		fmt.Fprint(f, "0")
 		return

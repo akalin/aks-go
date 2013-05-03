@@ -17,13 +17,13 @@ func calculatePhi(coefficients []int64, k int) big.Int {
 }
 
 // Returns whether p has exactly the given list of coefficients.
-func bigIntPoly2HasCoefficients(p *BigIntPoly2, coefficients []int64) bool {
+func bigIntPolyHasCoefficients(p *BigIntPoly, coefficients []int64) bool {
 	e := calculatePhi(coefficients, p.k)
 	return p.phi.Cmp(&e) == 0
 }
 
 // Dumps p to a string.
-func dumpBigIntPoly2(p *BigIntPoly2) string {
+func dumpBigIntPoly(p *BigIntPoly) string {
 	s := ""
 	for i := p.getCoefficientCount() - 1; i >= 0; i-- {
 		c := p.getCoefficient(i)
@@ -40,135 +40,135 @@ func dumpBigIntPoly2(p *BigIntPoly2) string {
 	return s
 }
 
-// NewBigIntPoly2(k, a, N, R) should return the zero polynomial
+// NewBigIntPoly(k, a, N, R) should return the zero polynomial
 // mod (N, X^R - 1).
-func TestNewBigIntPoly2(t *testing.T) {
+func TestNewBigIntPoly(t *testing.T) {
 	N := *big.NewInt(10)
 	R := *big.NewInt(5)
-	p := NewBigIntPoly2(N, R)
-	if !bigIntPoly2HasCoefficients(p, []int64{}) {
-		t.Error(dumpBigIntPoly2(p))
+	p := NewBigIntPoly(N, R)
+	if !bigIntPolyHasCoefficients(p, []int64{}) {
+		t.Error(dumpBigIntPoly(p))
 	}
 }
 
-// BigIntPoly2.Set() should set the polynomial to X^(k % R) + (a % N).
-func TestBigIntPoly2Set(t *testing.T) {
+// BigIntPoly.Set() should set the polynomial to X^(k % R) + (a % N).
+func TestBigIntPolySet(t *testing.T) {
 	a := *big.NewInt(12)
 	k := *big.NewInt(6)
 	N := *big.NewInt(10)
 	R := *big.NewInt(5)
-	p := NewBigIntPoly2(N, R)
+	p := NewBigIntPoly(N, R)
 	p.Set(a, k, N)
-	if !bigIntPoly2HasCoefficients(p, []int64{2, 1}) {
-		t.Error(dumpBigIntPoly2(p))
+	if !bigIntPolyHasCoefficients(p, []int64{2, 1}) {
+		t.Error(dumpBigIntPoly(p))
 	}
 
 	a = *big.NewInt(13)
 	k = *big.NewInt(7)
 	p.Set(a, k, N)
-	if !bigIntPoly2HasCoefficients(p, []int64{3, 0, 1}) {
-		t.Error(dumpBigIntPoly2(p))
+	if !bigIntPolyHasCoefficients(p, []int64{3, 0, 1}) {
+		t.Error(dumpBigIntPoly(p))
 	}
 }
 
 // p.Eq(q) should return whether p and q have the same coefficients.
-func TestBigIntPoly2Eq(t *testing.T) {
+func TestBigIntPolyEq(t *testing.T) {
 	N := *big.NewInt(10)
 	R := *big.NewInt(5)
 
-	p := NewBigIntPoly2(N, R)
+	p := NewBigIntPoly(N, R)
 	p.Set(*big.NewInt(1), *big.NewInt(2), N)
-	q := NewBigIntPoly2(N, R)
+	q := NewBigIntPoly(N, R)
 	q.Set(*big.NewInt(1), *big.NewInt(3), N)
-	r := NewBigIntPoly2(N, R)
+	r := NewBigIntPoly(N, R)
 	r.Set(*big.NewInt(2), *big.NewInt(3), N)
 
 	// Test reflexivity.
 	if !p.Eq(p) {
-		t.Error(dumpBigIntPoly2(p))
+		t.Error(dumpBigIntPoly(p))
 	}
 	if !q.Eq(q) {
-		t.Error(dumpBigIntPoly2(q))
+		t.Error(dumpBigIntPoly(q))
 	}
 	if !r.Eq(r) {
-		t.Error(dumpBigIntPoly2(r))
+		t.Error(dumpBigIntPoly(r))
 	}
 
 	if p.Eq(q) {
-		t.Error(dumpBigIntPoly2(p), dumpBigIntPoly2(q))
+		t.Error(dumpBigIntPoly(p), dumpBigIntPoly(q))
 	}
 	if p.Eq(r) {
-		t.Error(dumpBigIntPoly2(p), dumpBigIntPoly2(r))
+		t.Error(dumpBigIntPoly(p), dumpBigIntPoly(r))
 	}
 	if q.Eq(p) {
-		t.Error(dumpBigIntPoly2(q), dumpBigIntPoly2(p))
+		t.Error(dumpBigIntPoly(q), dumpBigIntPoly(p))
 	}
 	if q.Eq(r) {
-		t.Error(dumpBigIntPoly2(q), dumpBigIntPoly2(r))
+		t.Error(dumpBigIntPoly(q), dumpBigIntPoly(r))
 	}
 	if r.Eq(p) {
-		t.Error(dumpBigIntPoly2(r), dumpBigIntPoly2(p))
+		t.Error(dumpBigIntPoly(r), dumpBigIntPoly(p))
 	}
 	if r.Eq(q) {
-		t.Error(dumpBigIntPoly2(r), dumpBigIntPoly2(q))
+		t.Error(dumpBigIntPoly(r), dumpBigIntPoly(q))
 	}
 }
 
 // Multiplication should be modulo (N, X^R - 1).
-func TestBigIntPoly2Mul(t *testing.T) {
+func TestBigIntPolyMul(t *testing.T) {
 	N := *big.NewInt(10)
 	R := *big.NewInt(5)
 
-	p := NewBigIntPoly2(N, R)
+	p := NewBigIntPoly(N, R)
 	p.Set(*big.NewInt(4), *big.NewInt(3), N)
-	tmp := NewBigIntPoly2(N, R)
+	tmp := NewBigIntPoly(N, R)
 	p.mul(p, N, tmp)
-	if !bigIntPoly2HasCoefficients(p, []int64{6, 1, 0, 8}) {
-		t.Error(dumpBigIntPoly2(p))
+	if !bigIntPolyHasCoefficients(p, []int64{6, 1, 0, 8}) {
+		t.Error(dumpBigIntPoly(p))
 	}
 }
 
 // (X + a)^N should equal X^n + a mod (N, X^R - 1) for prime N.
-func TestBigIntPoly2Pow(t *testing.T) {
+func TestBigIntPolyPow(t *testing.T) {
 	a := *big.NewInt(2)
 	N := *big.NewInt(101)
 	R := *big.NewInt(53)
 
-	p := NewBigIntPoly2(N, R)
+	p := NewBigIntPoly(N, R)
 	p.Set(a, *big.NewInt(1), N)
-	tmp1 := NewBigIntPoly2(N, R)
-	tmp2 := NewBigIntPoly2(N, R)
+	tmp1 := NewBigIntPoly(N, R)
+	tmp2 := NewBigIntPoly(N, R)
 	p.Pow(N, tmp1, tmp2)
-	q := NewBigIntPoly2(N, R)
+	q := NewBigIntPoly(N, R)
 	q.Set(a, N, N)
 	if p.phi.Cmp(&q.phi) != 0 {
-		t.Error(dumpBigIntPoly2(p), dumpBigIntPoly2(q))
+		t.Error(dumpBigIntPoly(p), dumpBigIntPoly(q))
 	}
 }
 
 // Make sure that polynomials get converted to strings in standard
 // notation.
-func TestBigIntPoly2Format(t *testing.T) {
+func TestBigIntPolyFormat(t *testing.T) {
 	N := *big.NewInt(101)
 	R := *big.NewInt(53)
 
-	p := &BigIntPoly2{}
+	p := &BigIntPoly{}
 	str := fmt.Sprint(p)
 	if str != "0" {
-		t.Error(dumpBigIntPoly2(p), str)
+		t.Error(dumpBigIntPoly(p), str)
 	}
 
-	p = NewBigIntPoly2(N, R)
+	p = NewBigIntPoly(N, R)
 	p.Set(*big.NewInt(2), *big.NewInt(3), N)
 	str = fmt.Sprint(p)
 	if str != "x^3 + 2" {
-		t.Error(dumpBigIntPoly2(p), str)
+		t.Error(dumpBigIntPoly(p), str)
 	}
 
-	p = NewBigIntPoly2(N, R)
+	p = NewBigIntPoly(N, R)
 	p.Set(*big.NewInt(1), *big.NewInt(1), N)
 	str = fmt.Sprint(p)
 	if str != "x + 1" {
-		t.Error(dumpBigIntPoly2(p), str)
+		t.Error(dumpBigIntPoly(p), str)
 	}
 }
