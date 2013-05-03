@@ -96,3 +96,35 @@ func (p *BigIntPoly2) Set(a, k, N big.Int) {
 func (p *BigIntPoly2) Eq(q *BigIntPoly2) bool {
 	return p.phi.Cmp(&q.phi) == 0
 }
+
+// Sets p to the product of p and q mod (N, X^R - 1). tmp must not
+// alias p or q.
+func (p *BigIntPoly2) mul(q *BigIntPoly2, N big.Int, tmp *BigIntPoly2) {
+	tmp.phi.Mul(&p.phi, &q.phi)
+
+	// Mod tmp by X^R - 1.
+	mid := p.R * p.k
+	tmpBits := tmp.phi.Bits()
+	if len(tmpBits) > mid {
+		var lo, hi big.Int
+		lo.SetBits(tmpBits[:mid])
+		hi.SetBits(tmpBits[mid:])
+		tmp.phi.Add(&lo, &hi)
+	}
+
+	// Set p to tmp mod N.
+	p.phi.Set(&big.Int{})
+	for i := tmp.getCoefficientCount() - 1; i >= 0; i-- {
+		p.phi.Lsh(&p.phi, uint(p.k*_BIG_WORD_BITS))
+		c := tmp.getCoefficient(i)
+		if c.Cmp(&N) < 0 {
+			p.phi.Add(&p.phi, &c)
+		} else {
+			// Mod c by N. Use big.Int.QuoRem() instead of
+			// big.Int.Mod() since the latter allocates an
+			// extra big.Int.
+			c.QuoRem(&c, &N, &c)
+			p.phi.Add(&p.phi, &c)
+		}
+	}
+}

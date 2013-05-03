@@ -113,3 +113,17 @@ func TestBigIntPoly2Eq(t *testing.T) {
 		t.Error(dumpBigIntPoly2(r), dumpBigIntPoly2(q))
 	}
 }
+
+// Multiplication should be modulo (N, X^R - 1).
+func TestBigIntPoly2Mul(t *testing.T) {
+	N := *big.NewInt(10)
+	R := *big.NewInt(5)
+
+	p := NewBigIntPoly2(N, R)
+	p.Set(*big.NewInt(4), *big.NewInt(3), N)
+	tmp := NewBigIntPoly2(N, R)
+	p.mul(p, N, tmp)
+	if !bigIntPoly2HasCoefficients(p, []int64{6, 1, 0, 8}) {
+		t.Error(dumpBigIntPoly2(p))
+	}
+}
