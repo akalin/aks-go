@@ -78,3 +78,16 @@ func (p *BigIntPoly2) getCoefficient(i int) big.Int {
 	}
 	return c
 }
+
+// Sets p to X^k + a mod (N, X^R - 1).
+func (p *BigIntPoly2) Set(a, k, N big.Int) {
+	R := big.NewInt(int64(p.R))
+	var kModR big.Int
+	kModR.Mod(&k, R)
+	one := big.NewInt(1)
+	p.phi.Lsh(one, uint(kModR.Int64())*uint(p.k*_BIG_WORD_BITS))
+
+	var aModN big.Int
+	aModN.Mod(&a, &N)
+	p.phi.Add(&p.phi, &aModN)
+}
