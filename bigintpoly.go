@@ -3,14 +3,6 @@ package main
 import "fmt"
 import "math/big"
 
-const (
-	// Compute the size of a big.Word in bits.
-	_m             = ^big.Word(0)
-	_logS          = _m>>8&1 + _m>>16&1 + _m>>32&1
-	_S             = 1 << _logS
-	_BIG_WORD_BITS = _S << 3
-)
-
 // A BigIntPoly represents a polynomial with big.Int coefficients mod
 // some (N, X^R - 1).
 //
@@ -21,7 +13,7 @@ type BigIntPoly struct {
 	// in calculations without overflowing.
 	k int
 	// If p(x) is the polynomial as a function, phi is
-	// p(2^{k*_BIG_WORD_BITS}). Since a coefficient fits into k
+	// p(2^{k*bitsize(big.Word)}). Since a coefficient fits into k
 	// big.Words, this is a lossless transformation; that is, one
 	// can recover all coefficients of p(x) from phi.
 	phi big.Int
@@ -64,6 +56,13 @@ func (p *BigIntPoly) getCoefficientCount() int {
 	return coefficientCount
 }
 
+// Sets the coefficient count to the given number, which must be at
+// most p.R. The unused bytes of the leading coefficient must be
+// cleared (via commitCoefficient()) prior to this being called.
+func (p *BigIntPoly) setCoefficientCount(coefficientCount int) {
+	p.phi.SetBits(p.phi.Bits()[0 : coefficientCount*p.k])
+}
+
 // Returns the ith coefficient of this polynomial. i must be less than
 // p.getCoefficientCount().
 func (p *BigIntPoly) getCoefficient(i int) big.Int {
@@ -80,17 +79,38 @@ func (p *BigIntPoly) getCoefficient(i int) big.Int {
 	return c
 }
 
+// Must be called after all changes have been made to a coefficient
+// via a big.Int returned from p.getCoefficient().
+func (p *BigIntPoly) commitCoefficient(c big.Int) {
+	cBits := c.Bits()
+	unusedBits := cBits[len(cBits):p.k]
+	for j := 0; j < len(unusedBits); j++ {
+		unusedBits[j] = 0
+	}
+}
+
 // Sets p to X^k + a mod (N, X^R - 1).
 func (p *BigIntPoly) Set(a, k, N big.Int) {
-	R := big.NewInt(int64(p.R))
-	var kModR big.Int
-	kModR.Mod(&k, R)
-	one := big.NewInt(1)
-	p.phi.Lsh(one, uint(kModR.Int64())*uint(p.k*_BIG_WORD_BITS))
+	c0 := p.getCoefficient(0)
+	c0.Mod(&a, &N)
+	p.commitCoefficient(c0)
 
-	var aModN big.Int
-	aModN.Mod(&a, &N)
-	p.phi.Add(&p.phi, &aModN)
+	R := big.NewInt(int64(p.R))
+	var kModRBig big.Int
+	kModRBig.Mod(&k, R)
+	kModR := int(kModRBig.Int64())
+
+	for i := 1; i <= kModR; i++ {
+		c := p.getCoefficient(i)
+		c.Set(&big.Int{})
+		p.commitCoefficient(c)
+	}
+
+	cKModR := p.getCoefficient(kModR)
+	cKModR.Set(big.NewInt(1))
+	p.commitCoefficient(cKModR)
+
+	p.setCoefficientCount(kModR + 1)
 }
 
 // Returns whether p has the same coefficients as q.
@@ -98,36 +118,44 @@ func (p *BigIntPoly) Eq(q *BigIntPoly) bool {
 	return p.phi.Cmp(&q.phi) == 0
 }
 
-// Sets p to the product of p and q mod (N, X^R - 1). tmp must not
-// alias p or q.
+// Sets p to the product of p and q mod (N, X^R - 1). Assumes R >=
+// 2. tmp must not alias p or q.
 func (p *BigIntPoly) mul(q *BigIntPoly, N big.Int, tmp *BigIntPoly) {
 	tmp.phi.Mul(&p.phi, &q.phi)
+	p.phi, tmp.phi = tmp.phi, p.phi
 
-	// Mod tmp by X^R - 1.
+	// Mod p by X^R - 1.
 	mid := p.R * p.k
-	tmpBits := tmp.phi.Bits()
-	if len(tmpBits) > mid {
+	pBits := p.phi.Bits()
+	if len(pBits) > mid {
 		var lo, hi big.Int
-		lo.SetBits(tmpBits[:mid])
-		hi.SetBits(tmpBits[mid:])
-		tmp.phi.Add(&lo, &hi)
+		lo.SetBits(pBits[:mid])
+		hi.SetBits(pBits[mid:])
+		p.phi.Add(&lo, &hi)
 	}
 
-	// Set p to tmp mod N.
-	p.phi.Set(&big.Int{})
-	for i := tmp.getCoefficientCount() - 1; i >= 0; i-- {
-		p.phi.Lsh(&p.phi, uint(p.k*_BIG_WORD_BITS))
-		c := tmp.getCoefficient(i)
-		if c.Cmp(&N) < 0 {
-			p.phi.Add(&p.phi, &c)
-		} else {
+	// Mod p by N.
+	newCoefficientCount := 0
+	tmp2 := tmp.getCoefficient(0)
+	tmp3 := tmp.getCoefficient(1)
+	for i := 0; i < p.getCoefficientCount(); i++ {
+		c := p.getCoefficient(i)
+		if c.Cmp(&N) >= 0 {
 			// Mod c by N. Use big.Int.QuoRem() instead of
 			// big.Int.Mod() since the latter allocates an
 			// extra big.Int.
-			c.QuoRem(&c, &N, &c)
-			p.phi.Add(&p.phi, &c)
+			tmp2.QuoRem(&c, &N, &tmp3)
+			c.Set(&tmp3)
+			p.commitCoefficient(c)
+		}
+		if c.Sign() != 0 {
+			newCoefficientCount = i + 1
 		}
 	}
+	if newCoefficientCount > 0 {
+		p.commitCoefficient(p.getCoefficient(newCoefficientCount - 1))
+	}
+	p.setCoefficientCount(newCoefficientCount)
 }
 
 // Sets p to p^N mod (N, X^R - 1), where R is the size of p. tmp1 and
