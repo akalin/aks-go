@@ -4,6 +4,16 @@ import "fmt"
 import "math/big"
 import "testing"
 
+// Fill p's unused bits with non-zero data. This helps in flushing out
+// any bugs related to relying on memory to be zeroed.
+func fuzzBigIntPoly(p *BigIntPoly) {
+	bits := p.phi.Bits()
+	unusedBits := bits[len(bits):cap(bits)]
+	for i := 0; i < len(unusedBits); i++ {
+		unusedBits[i] = ^big.Word(0)
+	}
+}
+
 // Given a list of coefficients of a polynomial p(x) and the number of
 // big.Words required to hold a coefficient, calculates phi =
 // p(2^{k*_BIG_WORD_BITS}).
@@ -46,6 +56,7 @@ func TestNewBigIntPoly(t *testing.T) {
 	N := *big.NewInt(10)
 	R := *big.NewInt(5)
 	p := NewBigIntPoly(N, R)
+	fuzzBigIntPoly(p)
 	if !bigIntPolyHasCoefficients(p, []int64{}) {
 		t.Error(dumpBigIntPoly(p))
 	}
@@ -59,6 +70,7 @@ func TestBigIntPolySet(t *testing.T) {
 	R := *big.NewInt(5)
 	p := NewBigIntPoly(N, R)
 	p.Set(a, k, N)
+	fuzzBigIntPoly(p)
 	if !bigIntPolyHasCoefficients(p, []int64{2, 1}) {
 		t.Error(dumpBigIntPoly(p))
 	}
@@ -66,6 +78,7 @@ func TestBigIntPolySet(t *testing.T) {
 	a = *big.NewInt(13)
 	k = *big.NewInt(7)
 	p.Set(a, k, N)
+	fuzzBigIntPoly(p)
 	if !bigIntPolyHasCoefficients(p, []int64{3, 0, 1}) {
 		t.Error(dumpBigIntPoly(p))
 	}
@@ -78,10 +91,13 @@ func TestBigIntPolyEq(t *testing.T) {
 
 	p := NewBigIntPoly(N, R)
 	p.Set(*big.NewInt(1), *big.NewInt(2), N)
+	fuzzBigIntPoly(p)
 	q := NewBigIntPoly(N, R)
 	q.Set(*big.NewInt(1), *big.NewInt(3), N)
+	fuzzBigIntPoly(q)
 	r := NewBigIntPoly(N, R)
 	r.Set(*big.NewInt(2), *big.NewInt(3), N)
+	fuzzBigIntPoly(r)
 
 	// Test reflexivity.
 	if !p.Eq(p) {
@@ -121,7 +137,9 @@ func TestBigIntPolyMul(t *testing.T) {
 
 	p := NewBigIntPoly(N, R)
 	p.Set(*big.NewInt(4), *big.NewInt(3), N)
+	fuzzBigIntPoly(p)
 	tmp := NewBigIntPoly(N, R)
+	fuzzBigIntPoly(tmp)
 	p.mul(p, N, tmp)
 	if !bigIntPolyHasCoefficients(p, []int64{6, 1, 0, 8}) {
 		t.Error(dumpBigIntPoly(p))
@@ -136,11 +154,15 @@ func TestBigIntPolyPow(t *testing.T) {
 
 	p := NewBigIntPoly(N, R)
 	p.Set(a, *big.NewInt(1), N)
+	fuzzBigIntPoly(p)
 	tmp1 := NewBigIntPoly(N, R)
 	tmp2 := NewBigIntPoly(N, R)
+	fuzzBigIntPoly(tmp1)
+	fuzzBigIntPoly(tmp2)
 	p.Pow(N, tmp1, tmp2)
 	q := NewBigIntPoly(N, R)
 	q.Set(a, N, N)
+	fuzzBigIntPoly(q)
 	if p.phi.Cmp(&q.phi) != 0 {
 		t.Error(dumpBigIntPoly(p), dumpBigIntPoly(q))
 	}
@@ -153,6 +175,7 @@ func TestBigIntPolyFormat(t *testing.T) {
 	R := *big.NewInt(53)
 
 	p := &BigIntPoly{}
+	fuzzBigIntPoly(p)
 	str := fmt.Sprint(p)
 	if str != "0" {
 		t.Error(dumpBigIntPoly(p), str)
@@ -160,6 +183,7 @@ func TestBigIntPolyFormat(t *testing.T) {
 
 	p = NewBigIntPoly(N, R)
 	p.Set(*big.NewInt(2), *big.NewInt(3), N)
+	fuzzBigIntPoly(p)
 	str = fmt.Sprint(p)
 	if str != "x^3 + 2" {
 		t.Error(dumpBigIntPoly(p), str)
@@ -167,6 +191,7 @@ func TestBigIntPolyFormat(t *testing.T) {
 
 	p = NewBigIntPoly(N, R)
 	p.Set(*big.NewInt(1), *big.NewInt(1), N)
+	fuzzBigIntPoly(p)
 	str = fmt.Sprint(p)
 	if str != "x + 1" {
 		t.Error(dumpBigIntPoly(p), str)
