@@ -1,5 +1,6 @@
 package main
 
+import "flag"
 import "fmt"
 import "log"
 import "math/big"
@@ -188,18 +189,21 @@ func getFirstFactorBelow(n, M *big.Int) *big.Int {
 }
 
 func main() {
+	flag.Parse()
+
 	numCPU := runtime.NumCPU()
 	runtime.GOMAXPROCS(numCPU)
 
-	if len(os.Args) < 2 {
-		fmt.Fprintf(os.Stderr, "%s [number]\n", os.Args[0])
+	if flag.NArg() < 1 {
+		fmt.Fprintf(os.Stderr, "%s [options] [number]\n", os.Args[0])
+		flag.PrintDefaults()
 		os.Exit(-1)
 	}
 
 	var n big.Int
-	_, parsed := n.SetString(os.Args[1], 10)
+	_, parsed := n.SetString(flag.Arg(0), 10)
 	if !parsed {
-		fmt.Fprintf(os.Stderr, "could not parse %s\n", os.Args[1])
+		fmt.Fprintf(os.Stderr, "could not parse %s\n", flag.Arg(0))
 		os.Exit(-1)
 	}
 
