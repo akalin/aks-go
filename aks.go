@@ -189,10 +189,12 @@ func getFirstFactorBelow(n, M *big.Int) *big.Int {
 }
 
 func main() {
+	jobs := flag.Int(
+		"j", runtime.NumCPU(), "how many processing jobs to spawn")
+
 	flag.Parse()
 
-	numCPU := runtime.NumCPU()
-	runtime.GOMAXPROCS(numCPU)
+	runtime.GOMAXPROCS(*jobs)
 
 	if flag.NArg() < 1 {
 		fmt.Fprintf(os.Stderr, "%s [options] [number]\n", os.Args[0])
@@ -231,7 +233,7 @@ func main() {
 		return
 	}
 
-	a := getAKSWitness(&n, r, M, numCPU, log.New(os.Stderr, "", 0))
+	a := getAKSWitness(&n, r, M, *jobs, log.New(os.Stderr, "", 0))
 	if a != nil {
 		fmt.Printf("n is composite with AKS witness %v\n", a)
 	} else {
