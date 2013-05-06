@@ -6,6 +6,7 @@ import "log"
 import "math/big"
 import "os"
 import "runtime"
+import "runtime/pprof"
 
 // Returns whether (X + a)^n = X^n + a mod (n, X^r - 1). tmp1, tmp2,
 // and tmp3 must be BigIntPoly objects constructed with N, R = n, r,
@@ -193,6 +194,10 @@ func main() {
 		"j", runtime.NumCPU(), "how many processing jobs to spawn")
 	endStr := flag.String(
 		"end", "", "the upper bound to use (defaults to M)")
+	cpuProfilePath :=
+		flag.String("cpuprofile", "",
+			"Write a CPU profile to the specified file "+
+				"before exiting.")
 
 	flag.Parse()
 
@@ -202,6 +207,16 @@ func main() {
 		fmt.Fprintf(os.Stderr, "%s [options] [number]\n", os.Args[0])
 		flag.PrintDefaults()
 		os.Exit(-1)
+	}
+
+	if len(*cpuProfilePath) > 0 {
+		f, err := os.Create(*cpuProfilePath)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		pprof.StartCPUProfile(f)
+		defer pprof.StopCPUProfile()
 	}
 
 	var end big.Int
