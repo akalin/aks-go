@@ -125,7 +125,9 @@ func (p *BigIntPoly) Eq(q *BigIntPoly) bool {
 // Sets p to the product of p and q mod (N, X^R - 1). Assumes R >=
 // 2. tmp must not alias p or q.
 func (p *BigIntPoly) mul(q *BigIntPoly, N big.Int, tmp *BigIntPoly) {
+	fmt.Printf("multiplying p and q\n")
 	tmp.phi.Mul(&p.phi, &q.phi)
+	fmt.Printf("multiplying p and q done\n")
 	p.phi, tmp.phi = tmp.phi, p.phi
 
 	// Mod p by X^R - 1.
@@ -133,10 +135,14 @@ func (p *BigIntPoly) mul(q *BigIntPoly, N big.Int, tmp *BigIntPoly) {
 	pBits := p.phi.Bits()
 	if len(pBits) > mid {
 		var lo, hi big.Int
+		fmt.Printf("adding two halves\n")
 		lo.SetBits(pBits[:mid])
 		hi.SetBits(pBits[mid:])
 		p.phi.Add(&lo, &hi)
 		pBits = p.phi.Bits()
+		fmt.Printf("adding two halves done\n")
+	} else {
+		fmt.Printf("fits in lower half, not adding two halves\n")
 	}
 
 	// Clear the unused bits of the leading coefficient if
@@ -154,6 +160,8 @@ func (p *BigIntPoly) mul(q *BigIntPoly, N big.Int, tmp *BigIntPoly) {
 	if oldCoefficientCount > 0 {
 		p.commitCoefficient(p.getCoefficient(oldCoefficientCount - 1))
 	}
+
+	fmt.Printf("modding each coefficient by N\n")
 
 	// Mod p by N.
 	newCoefficientCount := 0
@@ -174,6 +182,8 @@ func (p *BigIntPoly) mul(q *BigIntPoly, N big.Int, tmp *BigIntPoly) {
 		}
 	}
 	p.setCoefficientCount(newCoefficientCount)
+
+	fmt.Printf("modding each coefficient by N done\n")
 }
 
 // Sets p to p^N mod (N, X^R - 1), where R is the size of p. tmp1 and
