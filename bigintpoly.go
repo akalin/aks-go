@@ -124,10 +124,11 @@ func (p *BigIntPoly) Eq(q *BigIntPoly) bool {
 
 // Sets p to the product of p and q mod (N, X^R - 1). Assumes R >=
 // 2. tmp must not alias p or q.
-func (p *BigIntPoly) mul(q *BigIntPoly, N big.Int, tmp *BigIntPoly) {
-	fmt.Printf("multiplying p and q\n")
+func (p *BigIntPoly) mul(
+	q *BigIntPoly, N big.Int, tmp *BigIntPoly, prefix string) {
+	fmt.Printf("%s: multiplying p and q\n", prefix)
 	tmp.phi.Mul(&p.phi, &q.phi)
-	fmt.Printf("multiplying p and q done\n")
+	fmt.Printf("%s: multiplying p and q done\n", prefix)
 	p.phi, tmp.phi = tmp.phi, p.phi
 
 	// Mod p by X^R - 1.
@@ -135,14 +136,14 @@ func (p *BigIntPoly) mul(q *BigIntPoly, N big.Int, tmp *BigIntPoly) {
 	pBits := p.phi.Bits()
 	if len(pBits) > mid {
 		var lo, hi big.Int
-		fmt.Printf("adding two halves\n")
+		fmt.Printf("%s: adding two halves\n", prefix)
 		lo.SetBits(pBits[:mid])
 		hi.SetBits(pBits[mid:])
 		p.phi.Add(&lo, &hi)
 		pBits = p.phi.Bits()
-		fmt.Printf("adding two halves done\n")
+		fmt.Printf("%s: adding two halves done\n", prefix)
 	} else {
-		fmt.Printf("fits in lower half, not adding two halves\n")
+		fmt.Printf("%s: fits in lower half, not adding two halves\n", prefix)
 	}
 
 	// Clear the unused bits of the leading coefficient if
@@ -161,7 +162,7 @@ func (p *BigIntPoly) mul(q *BigIntPoly, N big.Int, tmp *BigIntPoly) {
 		p.commitCoefficient(p.getCoefficient(oldCoefficientCount - 1))
 	}
 
-	fmt.Printf("modding each coefficient by N\n")
+	fmt.Printf("%s: modding each coefficient by N\n", prefix)
 
 	// Mod p by N.
 	newCoefficientCount := 0
@@ -183,7 +184,7 @@ func (p *BigIntPoly) mul(q *BigIntPoly, N big.Int, tmp *BigIntPoly) {
 	}
 	p.setCoefficientCount(newCoefficientCount)
 
-	fmt.Printf("modding each coefficient by N done\n")
+	fmt.Printf("%s: modding each coefficient by N done\n", prefix)
 }
 
 // Sets p to p^N mod (N, X^R - 1), where R is the size of p. tmp1 and
@@ -192,15 +193,16 @@ func (p *BigIntPoly) Pow(N big.Int, tmp1, tmp2 *BigIntPoly) {
 	tmp1.phi.Set(&p.phi)
 
 	for i := N.BitLen() - 2; i >= 0; i-- {
-		fmt.Printf("p = %v, i = %d, squaring\n", p, i)
-		tmp1.mul(tmp1, N, tmp2)
-		fmt.Printf("p = %v, i = %d, done\n", p, i)
+		prefix := fmt.Sprintf("p = %v, i = %d", p, i)
+		fmt.Printf("%s: squaring\n", prefix)
+		tmp1.mul(tmp1, N, tmp2, prefix)
+		fmt.Printf("%s: squaring done\n", prefix)
 		if N.Bit(i) != 0 {
-			fmt.Printf("p = %v, i = %d, multiplying by p\n", p, i)
-			tmp1.mul(p, N, tmp2)
-			fmt.Printf("p = %v, i = %d, multiplying by p done\n", p, i)
+			fmt.Printf("%s: multiplying by p\n", prefix)
+			tmp1.mul(p, N, tmp2, prefix)
+			fmt.Printf("%s: multiplying by p done\n", prefix)
 		} else {
-			fmt.Printf("p = %v, i = %d, skipping multiplying by p\n", p, i)
+			fmt.Printf("%s: skipping multiplying by p\n", prefix)
 		}
 	}
 
