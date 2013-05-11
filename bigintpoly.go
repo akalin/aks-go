@@ -182,9 +182,15 @@ func (p *BigIntPoly) Pow(N big.Int, tmp1, tmp2 *BigIntPoly) {
 	tmp1.phi.Set(&p.phi)
 
 	for i := N.BitLen() - 2; i >= 0; i-- {
+		fmt.Printf("p = %v, i = %d, squaring\n", p, i)
 		tmp1.mul(tmp1, N, tmp2)
+		fmt.Printf("p = %v, i = %d, done\n", p, i)
 		if N.Bit(i) != 0 {
+			fmt.Printf("p = %v, i = %d, multiplying by p\n", p, i)
 			tmp1.mul(p, N, tmp2)
+			fmt.Printf("p = %v, i = %d, multiplying by p done\n", p, i)
+		} else {
+			fmt.Printf("p = %v, i = %d, skipping multiplying by p\n", p, i)
 		}
 	}
 
