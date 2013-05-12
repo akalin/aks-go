@@ -135,56 +135,52 @@ func (p *BigIntPoly) mul(
 	mid := p.R * p.k
 	pBits := p.phi.Bits()
 	if len(pBits) > mid {
-		var lo, hi big.Int
-		fmt.Printf("%s: adding two halves\n", prefix)
-		lo.SetBits(pBits[:mid])
-		hi.SetBits(pBits[mid:])
-		p.phi.Add(&lo, &hi)
-		pBits = p.phi.Bits()
-		fmt.Printf("%s: adding two halves done\n", prefix)
+		fmt.Printf("%s: truncating\n", prefix)
+		p.phi.SetBits(pBits[:mid])
+		fmt.Printf("%s: truncating done\n", prefix)
 	} else {
-		fmt.Printf("%s: fits in lower half, not adding two halves\n", prefix)
+		fmt.Printf("%s: fits in lower half, not truncating\n", prefix)
 	}
-/*
-	// Clear the unused bits of the leading coefficient if
-	// necessary.
-	if len(pBits)%p.k != 0 {
-		start := len(pBits)
-		end := start + p.k - start%p.k
-		unusedBits := pBits[start:end]
-		for i := 0; i < len(unusedBits); i++ {
-			unusedBits[i] = 0
+	/*
+		// Clear the unused bits of the leading coefficient if
+		// necessary.
+		if len(pBits)%p.k != 0 {
+			start := len(pBits)
+			end := start + p.k - start%p.k
+			unusedBits := pBits[start:end]
+			for i := 0; i < len(unusedBits); i++ {
+				unusedBits[i] = 0
+			}
 		}
-	}
-	// Commit the leading coefficient before we access it.
-	oldCoefficientCount := p.getCoefficientCount()
-	if oldCoefficientCount > 0 {
-		p.commitCoefficient(p.getCoefficient(oldCoefficientCount - 1))
-	}
-	fmt.Printf("%s: modding each coefficient by N\n", prefix)
+		// Commit the leading coefficient before we access it.
+		oldCoefficientCount := p.getCoefficientCount()
+		if oldCoefficientCount > 0 {
+			p.commitCoefficient(p.getCoefficient(oldCoefficientCount - 1))
+		}
+		fmt.Printf("%s: modding each coefficient by N\n", prefix)
 
-	// Mod p by N.
-	newCoefficientCount := 0
-	tmp2 := tmp.getCoefficient(0)
-	tmp3 := tmp.getCoefficient(1)
-	for i := 0; i < oldCoefficientCount; i++ {
-		c := p.getCoefficient(i)
-		if c.Cmp(&N) >= 0 {
-			// Mod c by N. Use big.Int.QuoRem() instead of
-			// big.Int.Mod() since the latter allocates an
-			// extra big.Int.
-			tmp2.QuoRem(&c, &N, &tmp3)
-			c.Set(&tmp3)
-			p.commitCoefficient(c)
+		// Mod p by N.
+		newCoefficientCount := 0
+		tmp2 := tmp.getCoefficient(0)
+		tmp3 := tmp.getCoefficient(1)
+		for i := 0; i < oldCoefficientCount; i++ {
+			c := p.getCoefficient(i)
+			if c.Cmp(&N) >= 0 {
+				// Mod c by N. Use big.Int.QuoRem() instead of
+				// big.Int.Mod() since the latter allocates an
+				// extra big.Int.
+				tmp2.QuoRem(&c, &N, &tmp3)
+				c.Set(&tmp3)
+				p.commitCoefficient(c)
+			}
+			if c.Sign() != 0 {
+				newCoefficientCount = i + 1
+			}
 		}
-		if c.Sign() != 0 {
-			newCoefficientCount = i + 1
-		}
-	}
-	p.setCoefficientCount(newCoefficientCount)
+		p.setCoefficientCount(newCoefficientCount)
 
-	fmt.Printf("%s: modding each coefficient by N done\n", prefix)
-*/
+		fmt.Printf("%s: modding each coefficient by N done\n", prefix)
+	*/
 }
 
 // Sets p to p^N mod (N, X^R - 1), where R is the size of p. tmp1 and
