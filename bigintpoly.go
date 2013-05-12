@@ -161,7 +161,7 @@ func (p *BigIntPoly) mul(
 	if oldCoefficientCount > 0 {
 		p.commitCoefficient(p.getCoefficient(oldCoefficientCount - 1))
 	}
-
+/*
 	fmt.Printf("%s: modding each coefficient by N\n", prefix)
 
 	// Mod p by N.
@@ -185,6 +185,7 @@ func (p *BigIntPoly) mul(
 	p.setCoefficientCount(newCoefficientCount)
 
 	fmt.Printf("%s: modding each coefficient by N done\n", prefix)
+*/
 }
 
 // Sets p to p^N mod (N, X^R - 1), where R is the size of p. tmp1 and
