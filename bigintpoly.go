@@ -145,7 +145,7 @@ func (p *BigIntPoly) mul(
 	} else {
 		fmt.Printf("%s: fits in lower half, not adding two halves\n", prefix)
 	}
-
+/*
 	// Clear the unused bits of the leading coefficient if
 	// necessary.
 	if len(pBits)%p.k != 0 {
@@ -161,7 +161,6 @@ func (p *BigIntPoly) mul(
 	if oldCoefficientCount > 0 {
 		p.commitCoefficient(p.getCoefficient(oldCoefficientCount - 1))
 	}
-/*
 	fmt.Printf("%s: modding each coefficient by N\n", prefix)
 
 	// Mod p by N.
