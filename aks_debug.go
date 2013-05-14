@@ -5,7 +5,7 @@ import "math/big"
 import "os"
 import "runtime/pprof"
 
-func testAKSWitnesses(ch chan int) {
+func doWork(ch chan int) {
 	R := 16451
 	var bits uint = 5 * 64
 
@@ -41,7 +41,7 @@ func main() {
 	defer pprof.StopCPUProfile()
 
 	ch := make(chan int, 1)
-	go testAKSWitnesses(ch)
+	go doWork(ch)
 
 	<-ch
 }
