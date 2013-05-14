@@ -8,6 +8,21 @@ import "runtime"
 import "runtime/pprof"
 
 func isAKSWitness() {
+}
+
+// Holds the result of an AKS witness test.
+type witnessResult struct {
+	a         *big.Int
+	isWitness bool
+}
+
+// Tests all numbers received on numberCh if they are witnesses of n
+// with parameter r. Sends the results to resultCh.
+func testAKSWitnesses(
+	numberCh chan *big.Int,
+	resultCh chan witnessResult) {
+	<-numberCh
+
 	R := 16451
 	var bits uint = 5 * 64
 
@@ -29,25 +44,8 @@ func isAKSWitness() {
 			fmt.Printf("%d: not shifting\n", i)
 		}
 	}
-}
 
-// Holds the result of an AKS witness test.
-type witnessResult struct {
-	a         *big.Int
-	isWitness bool
-}
-
-// Tests all numbers received on numberCh if they are witnesses of n
-// with parameter r. Sends the results to resultCh.
-func testAKSWitnesses(
-	numberCh chan *big.Int,
-	resultCh chan witnessResult) {
-	for a := range numberCh {
-		fmt.Printf("Testing %v...\n", a)
-		isAKSWitness()
-		fmt.Printf("Finished testing %v\n", a)
-		resultCh <- witnessResult{a, false}
-	}
+	resultCh <- witnessResult{nil, false}
 }
 
 func main() {
@@ -62,7 +60,6 @@ func main() {
 	defer pprof.StopCPUProfile()
 
 	numberCh := make(chan *big.Int, 1)
-	defer close(numberCh)
 	resultCh := make(chan witnessResult, 1)
 	go testAKSWitnesses(numberCh, resultCh)
 
