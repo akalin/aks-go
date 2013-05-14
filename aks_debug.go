@@ -61,38 +61,12 @@ type witnessResult struct {
 // with parameter r. Sends the results to resultCh.
 func testAKSWitnesses(
 	numberCh chan *big.Int,
-	resultCh chan witnessResult,
-	logger *log.Logger) {
+	resultCh chan witnessResult) {
 	for a := range numberCh {
-		logger.Printf("Testing %v...\n", a)
+		fmt.Printf("Testing %v...\n", a)
 		isAKSWitness()
-		logger.Printf("Finished testing %v\n", a)
+		fmt.Printf("Finished testing %v\n", a)
 		resultCh <- witnessResult{a, false}
-	}
-}
-
-// Returns an AKS witness of n with the parameters r and M, or nil if
-// there isn't one. Tests up to maxOutstanding numbers at once.
-func getAKSWitness(maxOutstanding int, logger *log.Logger) {
-	numberCh := make(chan *big.Int, maxOutstanding)
-	defer close(numberCh)
-	resultCh := make(chan witnessResult, maxOutstanding)
-	for i := 0; i < maxOutstanding; i++ {
-		go testAKSWitnesses(numberCh, resultCh, logger)
-	}
-
-	for i := 1; i < 10; {
-		select {
-		case result := <-resultCh:
-			logger.Printf("%v isWitness=%t\n",
-				result.a, result.isWitness)
-			if result.isWitness {
-				return
-			}
-		default:
-			var a big.Int
-			numberCh <- &a
-		}
 	}
 }
 
@@ -107,5 +81,22 @@ func main() {
 	pprof.StartCPUProfile(f)
 	defer pprof.StopCPUProfile()
 
-	getAKSWitness(1, log.New(os.Stderr, "", 0))
+	numberCh := make(chan *big.Int, 1)
+	defer close(numberCh)
+	resultCh := make(chan witnessResult, 1)
+	go testAKSWitnesses(numberCh, resultCh)
+
+	for i := 1; i < 10; {
+		select {
+		case result := <-resultCh:
+			fmt.Printf("%v isWitness=%t\n",
+				result.a, result.isWitness)
+			if result.isWitness {
+				return
+			}
+		default:
+			var a big.Int
+			numberCh <- &a
+		}
+	}
 }
