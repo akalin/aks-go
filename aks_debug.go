@@ -11,16 +11,33 @@ import "runtime/pprof"
 // Returns whether (X + a)^n = X^n + a mod (n, X^r - 1). tmp1, tmp2,
 // and tmp3 must be BigIntPoly objects constructed with N, R = n, r,
 // and they must not alias each other.
-func isAKSWitness(n, a big.Int, tmp1, tmp2, tmp3 *BigIntPoly) bool {
-	// Left-hand side: (X + a)^n mod (n, X^r - 1).
-	tmp1.Set(a, *big.NewInt(1), n)
-	tmp1.Pow(n, tmp2, tmp3)
+func isAKSWitness(n big.Int, R int, a big.Int, tmp1, tmp2, tmp3 *BigIntPoly) bool {
+	var maxCoefficient big.Int
+	maxCoefficient.Sub(&n, big.NewInt(1))
+	maxCoefficient.Mul(&maxCoefficient, &maxCoefficient)
+	maxCoefficient.Mul(&maxCoefficient, big.NewInt(int64(R)))
 
-	// Right-hand side: (X^n + a) mod (n, X^r - 1).
-	tmp2.Set(a, n, n)
+	k := len(maxCoefficient.Bits())
 
-	isWitness := !tmp1.Eq(tmp2)
-	return isWitness
+	var phi big.Int
+	phi.Lsh(big.NewInt(1), uint(k * _BIG_WORD_BITS))
+	phi.Add(&phi, &a)
+
+	s := uint(R * k * _BIG_WORD_BITS)
+	for i := 0; ; i++ {
+		fmt.Printf("%d: multiplying...\n", i)
+		phi.Mul(&phi, &phi)
+		fmt.Printf("%d: multiplying done; shifting...\n", i)
+		len := uint(phi.BitLen())
+		if len > s {
+			fmt.Printf("%d: shifting...\n", i)
+			phi.Rsh(&phi, len - s)
+			fmt.Printf("%d: shifting done.\n", i)
+		} else {
+			fmt.Printf("%d: not shifting\n", i)
+		}
+	}
+	return false
 }
 
 // Returns the first AKS witness of n with the parameters r and M, or
@@ -32,7 +49,7 @@ func getFirstAKSWitness(n, r, M *big.Int, logger *log.Logger) *big.Int {
 
 	for a := big.NewInt(1); a.Cmp(M) < 0; a.Add(a, big.NewInt(1)) {
 		logger.Printf("Testing %v (M = %v)...\n", a, M)
-		isWitness := isAKSWitness(*n, *a, tmp1, tmp2, tmp3)
+		isWitness := isAKSWitness(*n, int(r.Int64()), *a, tmp1, tmp2, tmp3)
 		if isWitness {
 			return a
 		}
@@ -59,7 +76,7 @@ func testAKSWitnesses(
 
 	for a := range numberCh {
 		logger.Printf("Testing %v...\n", a)
-		isWitness := isAKSWitness(*n, *a, tmp1, tmp2, tmp3)
+		isWitness := isAKSWitness(*n, int(r.Int64()), *a, tmp1, tmp2, tmp3)
 		logger.Printf("Finished testing %v (isWitness=%t)\n",
 			a, isWitness)
 		resultCh <- witnessResult{a, isWitness}
