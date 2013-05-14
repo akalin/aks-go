@@ -8,10 +8,15 @@ import "os"
 import "runtime"
 import "runtime/pprof"
 
-// Returns whether (X + a)^n = X^n + a mod (n, X^r - 1). tmp1, tmp2,
-// and tmp3 must be BigIntPoly objects constructed with N, R = n, r,
-// and they must not alias each other.
-func isAKSWitness(n big.Int, R int, a big.Int, tmp1, tmp2, tmp3 *BigIntPoly) bool {
+const (
+	// Compute the size of a big.Word in bits.
+	_m             = ^big.Word(0)
+	_logS          = _m>>8&1 + _m>>16&1 + _m>>32&1
+	_S             = 1 << _logS
+	_BIG_WORD_BITS = _S << 3
+)
+
+func isAKSWitness(n big.Int, R int, a big.Int) bool {
 	var maxCoefficient big.Int
 	maxCoefficient.Sub(&n, big.NewInt(1))
 	maxCoefficient.Mul(&maxCoefficient, &maxCoefficient)
@@ -40,23 +45,6 @@ func isAKSWitness(n big.Int, R int, a big.Int, tmp1, tmp2, tmp3 *BigIntPoly) boo
 	return false
 }
 
-// Returns the first AKS witness of n with the parameters r and M, or
-// nil if there isn't one.
-func getFirstAKSWitness(n, r, M *big.Int, logger *log.Logger) *big.Int {
-	tmp1 := NewBigIntPoly(*n, *r)
-	tmp2 := NewBigIntPoly(*n, *r)
-	tmp3 := NewBigIntPoly(*n, *r)
-
-	for a := big.NewInt(1); a.Cmp(M) < 0; a.Add(a, big.NewInt(1)) {
-		logger.Printf("Testing %v (M = %v)...\n", a, M)
-		isWitness := isAKSWitness(*n, int(r.Int64()), *a, tmp1, tmp2, tmp3)
-		if isWitness {
-			return a
-		}
-	}
-	return nil
-}
-
 // Holds the result of an AKS witness test.
 type witnessResult struct {
 	a         *big.Int
@@ -70,13 +58,9 @@ func testAKSWitnesses(
 	numberCh chan *big.Int,
 	resultCh chan witnessResult,
 	logger *log.Logger) {
-	tmp1 := NewBigIntPoly(*n, *r)
-	tmp2 := NewBigIntPoly(*n, *r)
-	tmp3 := NewBigIntPoly(*n, *r)
-
 	for a := range numberCh {
 		logger.Printf("Testing %v...\n", a)
-		isWitness := isAKSWitness(*n, int(r.Int64()), *a, tmp1, tmp2, tmp3)
+		isWitness := isAKSWitness(*n, int(r.Int64()), *a)
 		logger.Printf("Finished testing %v (isWitness=%t)\n",
 			a, isWitness)
 		resultCh <- witnessResult{a, isWitness}
