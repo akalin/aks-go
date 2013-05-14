@@ -16,7 +16,15 @@ const (
 	_BIG_WORD_BITS = _S << 3
 )
 
-func isAKSWitness(n big.Int, R int, a big.Int) bool {
+func isAKSWitness() {
+	var n big.Int
+	_, parsed := n.SetString("332315159569814711702351072539787810327", 10)
+	if !parsed {
+		panic("could not parse")
+	}
+
+	R := 16451
+
 	var maxCoefficient big.Int
 	maxCoefficient.Sub(&n, big.NewInt(1))
 	maxCoefficient.Mul(&maxCoefficient, &maxCoefficient)
@@ -26,7 +34,7 @@ func isAKSWitness(n big.Int, R int, a big.Int) bool {
 
 	var phi big.Int
 	phi.Lsh(big.NewInt(1), uint(k * _BIG_WORD_BITS))
-	phi.Add(&phi, &a)
+	phi.Add(&phi, big.NewInt(1))
 
 	s := uint(R * k * _BIG_WORD_BITS)
 	for i := 0; ; i++ {
@@ -42,7 +50,6 @@ func isAKSWitness(n big.Int, R int, a big.Int) bool {
 			fmt.Printf("%d: not shifting\n", i)
 		}
 	}
-	return false
 }
 
 // Holds the result of an AKS witness test.
@@ -54,16 +61,14 @@ type witnessResult struct {
 // Tests all numbers received on numberCh if they are witnesses of n
 // with parameter r. Sends the results to resultCh.
 func testAKSWitnesses(
-	n, r *big.Int,
 	numberCh chan *big.Int,
 	resultCh chan witnessResult,
 	logger *log.Logger) {
 	for a := range numberCh {
 		logger.Printf("Testing %v...\n", a)
-		isWitness := isAKSWitness(*n, int(r.Int64()), *a)
-		logger.Printf("Finished testing %v (isWitness=%t)\n",
-			a, isWitness)
-		resultCh <- witnessResult{a, isWitness}
+		isAKSWitness()
+		logger.Printf("Finished testing %v\n", a)
+		resultCh <- witnessResult{a, false}
 	}
 }
 
@@ -77,7 +82,7 @@ func getAKSWitness(
 	defer close(numberCh)
 	resultCh := make(chan witnessResult, maxOutstanding)
 	for i := 0; i < maxOutstanding; i++ {
-		go testAKSWitnesses(n, r, numberCh, resultCh, logger)
+		go testAKSWitnesses(numberCh, resultCh, logger)
 	}
 
 	// Send off all numbers for testing, draining any results that
