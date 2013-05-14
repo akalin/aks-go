@@ -7,14 +7,6 @@ import "os"
 import "runtime"
 import "runtime/pprof"
 
-const (
-	// Compute the size of a big.Word in bits.
-	_m             = ^big.Word(0)
-	_logS          = _m>>8&1 + _m>>16&1 + _m>>32&1
-	_S             = 1 << _logS
-	_BIG_WORD_BITS = _S << 3
-)
-
 func isAKSWitness() {
 	var n big.Int
 	_, parsed := n.SetString("332315159569814711702351072539787810327", 10)
@@ -23,19 +15,13 @@ func isAKSWitness() {
 	}
 
 	R := 16451
-
-	var maxCoefficient big.Int
-	maxCoefficient.Sub(&n, big.NewInt(1))
-	maxCoefficient.Mul(&maxCoefficient, &maxCoefficient)
-	maxCoefficient.Mul(&maxCoefficient, big.NewInt(int64(R)))
-
-	k := len(maxCoefficient.Bits())
+	var bits uint = 5 * 64
 
 	var phi big.Int
-	phi.Lsh(big.NewInt(1), uint(k*_BIG_WORD_BITS))
+	phi.Lsh(big.NewInt(1), bits)
 	phi.Add(&phi, big.NewInt(1))
 
-	s := uint(R * k * _BIG_WORD_BITS)
+	s := uint(R) * bits
 	for i := 0; i < 45; i++ {
 		fmt.Printf("%d: multiplying...\n", i)
 		phi.Mul(&phi, &phi)
