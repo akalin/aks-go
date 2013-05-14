@@ -1,3 +1,4 @@
 aks
+aks_debug
 *.test
 *.out
