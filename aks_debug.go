@@ -3,7 +3,6 @@ package main
 import "log"
 import "math/big"
 import "os"
-import "runtime"
 import "runtime/pprof"
 
 func testAKSWitnesses(ch chan int) {
@@ -33,8 +32,6 @@ func testAKSWitnesses(ch chan int) {
 }
 
 func main() {
-	runtime.GOMAXPROCS(1)
-
 	f, err := os.Create("cpu.out")
 	if err != nil {
 		log.Fatal(err)
