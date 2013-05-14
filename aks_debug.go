@@ -196,8 +196,6 @@ func getFirstFactorBelow(n, M *big.Int) *big.Int {
 }
 
 func main() {
-	endStr := flag.String(
-		"end", "", "the upper bound to use (defaults to M)")
 	cpuProfilePath :=
 		flag.String("cpuprofile", "",
 			"Write a CPU profile to the specified file "+
@@ -223,15 +221,6 @@ func main() {
 		defer pprof.StopCPUProfile()
 	}
 
-	var end big.Int
-	if len(*endStr) > 0 {
-		_, parsed := end.SetString(*endStr, 10)
-		if !parsed {
-			fmt.Fprintf(os.Stderr, "could not parse %s\n", *endStr)
-			os.Exit(-1)
-		}
-	}
-
 	var n big.Int
 	_, parsed := n.SetString(flag.Arg(0), 10)
 	if !parsed {
@@ -249,9 +238,8 @@ func main() {
 	r := calculateAKSModulus(&n)
 	M := calculateAKSUpperBound(&n, r)
 
-	if end.Sign() <= 0 {
-		end.Set(M)
-	}
+	var end big.Int
+	end.Set(M)
 	fmt.Printf("n = %v, r = %v, M = %v, end = %v\n", &n, r, M, &end)
 	factor := getFirstFactorBelow(&n, M)
 	if factor != nil {
