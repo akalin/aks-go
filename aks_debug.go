@@ -32,7 +32,7 @@ func isAKSWitness() {
 	k := len(maxCoefficient.Bits())
 
 	var phi big.Int
-	phi.Lsh(big.NewInt(1), uint(k * _BIG_WORD_BITS))
+	phi.Lsh(big.NewInt(1), uint(k*_BIG_WORD_BITS))
 	phi.Add(&phi, big.NewInt(1))
 
 	s := uint(R * k * _BIG_WORD_BITS)
@@ -43,7 +43,7 @@ func isAKSWitness() {
 		len := uint(phi.BitLen())
 		if len > s {
 			fmt.Printf("%d: shifting...\n", i)
-			phi.Rsh(&phi, len - s)
+			phi.Rsh(&phi, len-s)
 			fmt.Printf("%d: shifting done.\n", i)
 		} else {
 			fmt.Printf("%d: not shifting\n", i)
@@ -115,83 +115,6 @@ func getAKSWitness(
 	}
 
 	return nil
-}
-
-// Returns an upper bound for r such that o_r(n) > ceil(lg(n))^2 that
-// is polylog in n.
-func calculateAKSModulusUpperBound(n *big.Int) *big.Int {
-	two := big.NewInt(2)
-	three := big.NewInt(3)
-	five := big.NewInt(5)
-	eight := big.NewInt(8)
-
-	// Calculate max(ceil(lg(n))^5, 3).
-	ceilLgN := big.NewInt(int64(n.BitLen()))
-	rUpperBound := &big.Int{}
-	rUpperBound.Exp(ceilLgN, five, nil)
-	rUpperBound = Max(rUpperBound, three)
-
-	var nMod8 big.Int
-	nMod8.Mod(n, eight)
-	if (nMod8.Cmp(three) == 0) || (nMod8.Cmp(five) == 0) {
-		// Calculate 8*ceil(lg(n))^2.
-		var rUpperBound2 big.Int
-		rUpperBound2.Exp(ceilLgN, two, nil)
-		rUpperBound2.Mul(&rUpperBound2, eight)
-		rUpperBound = Min(rUpperBound, &rUpperBound2)
-	}
-	return rUpperBound
-}
-
-// Returns the least r such that o_r(n) > ceil(lg(n))^2 >= ceil(lg(n)^2).
-func calculateAKSModulus(n *big.Int) *big.Int {
-	one := big.NewInt(1)
-	two := big.NewInt(2)
-
-	ceilLgNSq := big.NewInt(int64(n.BitLen()))
-	ceilLgNSq.Mul(ceilLgNSq, ceilLgNSq)
-	var r big.Int
-	r.Add(ceilLgNSq, two)
-	rUpperBound := calculateAKSModulusUpperBound(n)
-	for ; r.Cmp(rUpperBound) < 0; r.Add(&r, one) {
-		var gcd big.Int
-		gcd.GCD(nil, nil, n, &r)
-		if gcd.Cmp(one) != 0 {
-			continue
-		}
-		o := CalculateMultiplicativeOrder(n, &r)
-		if o.Cmp(ceilLgNSq) > 0 {
-			return &r
-		}
-	}
-
-	panic("Could not find AKS modulus")
-}
-
-// Returns floor(sqrt(Phi(r))) * ceil(lg(n)) + 1 > floor(sqrt(Phi(r))) * lg(n).
-func calculateAKSUpperBound(n, r *big.Int) *big.Int {
-	one := big.NewInt(1)
-	two := big.NewInt(2)
-
-	M := CalculateEulerPhi(r)
-	M = FloorRoot(M, two)
-	M.Mul(M, big.NewInt(int64(n.BitLen())))
-	M.Add(M, one)
-	return M
-}
-
-// Returns the first factor of n less than M.
-func getFirstFactorBelow(n, M *big.Int) *big.Int {
-	var factor *big.Int
-	var mMinusOne big.Int
-	mMinusOne.Sub(M, big.NewInt(1))
-	TrialDivide(n, func(q, e *big.Int) bool {
-		if q.Cmp(M) < 0 && q.Cmp(n) < 0 {
-			factor = q
-		}
-		return false
-	}, &mMinusOne)
-	return factor
 }
 
 func main() {
