@@ -8,12 +8,6 @@ import "runtime"
 import "runtime/pprof"
 
 func isAKSWitness() {
-	var n big.Int
-	_, parsed := n.SetString("332315159569814711702351072539787810327", 10)
-	if !parsed {
-		panic("could not parse")
-	}
-
 	R := 16451
 	var bits uint = 5 * 64
 
