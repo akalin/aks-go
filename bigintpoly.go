@@ -186,12 +186,20 @@ func (p *BigIntPoly) mul(
 // Sets p to p^N mod (N, X^R - 1), where R is the size of p. tmp1 and
 // tmp2 must not alias each other or p.
 func (p *BigIntPoly) Pow(N big.Int, tmp1, tmp2 *BigIntPoly) {
-	var M big.Int
-	M.Lsh(big.NewInt(1), uint(p.R * p.k * _BIG_WORD_BITS))
-	fmt.Printf("exponentiating p = %v...\n", p)
-	tmp1.phi.Exp(&p.phi, &N, &M)
-	fmt.Printf("exponentiating p = %v done\n")
-	p.phi, tmp1.phi = tmp1.phi, p.phi
+	s := uint(p.R * p.k * _BIG_WORD_BITS)
+	for i := 0; ; i++ {
+		fmt.Printf("%d: multiplying...\n", i)
+		p.phi.Mul(&p.phi, &p.phi)
+		fmt.Printf("%d: multiplying done; shifting...\n", i)
+		len := uint(p.phi.BitLen())
+		if len > s {
+			fmt.Printf("%d: shifting...\n", i)
+			p.phi.Rsh(&p.phi, len - s)
+			fmt.Printf("%d: shifting done.\n", i)
+		} else {
+			fmt.Printf("%d: not shifting\n", i)
+		}
+	}
 }
 
 // fmt.Formatter implementation.
