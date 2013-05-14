@@ -66,17 +66,7 @@ func main() {
 	resultCh := make(chan witnessResult, 1)
 	go testAKSWitnesses(numberCh, resultCh)
 
-	for i := 1; i < 10; {
-		select {
-		case result := <-resultCh:
-			fmt.Printf("%v isWitness=%t\n",
-				result.a, result.isWitness)
-			if result.isWitness {
-				return
-			}
-		default:
-			var a big.Int
-			numberCh <- &a
-		}
-	}
+	var a big.Int
+	numberCh <- &a
+	<-resultCh
 }
