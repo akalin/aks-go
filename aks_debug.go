@@ -73,10 +73,7 @@ func testAKSWitnesses(
 
 // Returns an AKS witness of n with the parameters r and M, or nil if
 // there isn't one. Tests up to maxOutstanding numbers at once.
-func getAKSWitness(
-	M *big.Int,
-	maxOutstanding int,
-	logger *log.Logger) *big.Int {
+func getAKSWitness(maxOutstanding int, logger *log.Logger) {
 	numberCh := make(chan *big.Int, maxOutstanding)
 	defer close(numberCh)
 	resultCh := make(chan witnessResult, maxOutstanding)
@@ -84,37 +81,19 @@ func getAKSWitness(
 		go testAKSWitnesses(numberCh, resultCh, logger)
 	}
 
-	// Send off all numbers for testing, draining any results that
-	// come in while we're doing so.
-	tested := big.NewInt(1)
-	for i := big.NewInt(1); i.Cmp(M) < 0; {
+	for i := 1; i < 10; {
 		select {
 		case result := <-resultCh:
-			tested.Add(tested, big.NewInt(1))
 			logger.Printf("%v isWitness=%t\n",
 				result.a, result.isWitness)
 			if result.isWitness {
-				return result.a
+				return
 			}
 		default:
 			var a big.Int
-			a.Set(i)
 			numberCh <- &a
-			i.Add(i, big.NewInt(1))
 		}
 	}
-
-	// Drain any remaining results.
-	for tested.Cmp(M) < 0 {
-		result := <-resultCh
-		tested.Add(tested, big.NewInt(1))
-		logger.Printf("%v isWitness=%t\n", result.a, result.isWitness)
-		if result.isWitness {
-			return result.a
-		}
-	}
-
-	return nil
 }
 
 func main() {
@@ -128,12 +107,5 @@ func main() {
 	pprof.StartCPUProfile(f)
 	defer pprof.StopCPUProfile()
 
-	var end big.Int
-	end.Set(big.NewInt(10))
-	a := getAKSWitness(&end, 1, log.New(os.Stderr, "", 0))
-	if a != nil {
-		fmt.Printf("n is composite with AKS witness %v\n", a)
-	} else {
-		fmt.Printf("n is prime\n")
-	}
+	getAKSWitness(1, log.New(os.Stderr, "", 0))
 }
