@@ -36,7 +36,7 @@ func isAKSWitness() {
 	phi.Add(&phi, big.NewInt(1))
 
 	s := uint(R * k * _BIG_WORD_BITS)
-	for i := 0; ; i++ {
+	for i := 0; i < 45; i++ {
 		fmt.Printf("%d: multiplying...\n", i)
 		phi.Mul(&phi, &phi)
 		fmt.Printf("%d: multiplying done; shifting...\n", i)
