@@ -40,7 +40,7 @@ func main() {
 	pprof.StartCPUProfile(f)
 	defer pprof.StopCPUProfile()
 
-	ch := make(chan int, 1)
+	ch := make(chan int)
 	go doWork(ch)
 
 	<-ch
