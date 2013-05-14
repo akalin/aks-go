@@ -5,17 +5,15 @@ To build:
 
 go build *.go
 
-To test:
+To reproduce the error:
 
-go test *.go
+for i in $(seq 1 300); do (env GOGCTRACE=1 ./aks_debug &); done
 
-To run:
+Then when everything settles down, look at 'ps' and see if there are
+any remaining aks_debug processes left.
 
-# Should indicate composite.
-./aks 2993374621
-
-# Should indicate prime.
-./aks 2685241991
+Removing the profiling code makes the problem go away. So does calling
+doWork directly.
 
 Use of this source code is governed by a BSD-style license that can be
 found in the LICENSE file.
