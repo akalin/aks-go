@@ -1,6 +1,5 @@
 package main
 
-import "fmt"
 import "log"
 import "math/big"
 import "os"
@@ -17,16 +16,16 @@ func testAKSWitnesses(ch chan int) {
 
 	s := uint(R) * bits
 	for i := 0; i < 15; i++ {
-		fmt.Printf("%d: multiplying...\n", i)
+		log.Printf("%d: multiplying...\n", i)
 		phi.Mul(&phi, &phi)
-		fmt.Printf("%d: multiplying done; shifting...\n", i)
+		log.Printf("%d: multiplying done; shifting...\n", i)
 		len := uint(phi.BitLen())
 		if len > s {
-			fmt.Printf("%d: shifting...\n", i)
+			log.Printf("%d: shifting...\n", i)
 			phi.Rsh(&phi, len-s)
-			fmt.Printf("%d: shifting done.\n", i)
+			log.Printf("%d: shifting done.\n", i)
 		} else {
-			fmt.Printf("%d: not shifting\n", i)
+			log.Printf("%d: not shifting\n", i)
 		}
 	}
 
