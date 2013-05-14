@@ -186,22 +186,11 @@ func (p *BigIntPoly) mul(
 // Sets p to p^N mod (N, X^R - 1), where R is the size of p. tmp1 and
 // tmp2 must not alias each other or p.
 func (p *BigIntPoly) Pow(N big.Int, tmp1, tmp2 *BigIntPoly) {
-	tmp1.phi.Set(&p.phi)
-
-	for i := N.BitLen() - 2; i >= 0; i-- {
-		prefix := fmt.Sprintf("p = %v, i = %d", p, i)
-		fmt.Printf("%s: squaring\n", prefix)
-		tmp1.mul(tmp1, N, tmp2, prefix)
-		fmt.Printf("%s: squaring done\n", prefix)
-		if N.Bit(i) != 0 {
-			fmt.Printf("%s: multiplying by p\n", prefix)
-			tmp1.mul(p, N, tmp2, prefix)
-			fmt.Printf("%s: multiplying by p done\n", prefix)
-		} else {
-			fmt.Printf("%s: skipping multiplying by p\n", prefix)
-		}
-	}
-
+	var M big.Int
+	M.Lsh(big.NewInt(1), uint(p.R * p.k * _BIG_WORD_BITS))
+	fmt.Printf("exponentiating p = %v...\n", p)
+	tmp1.phi.Exp(&p.phi, &N, &M)
+	fmt.Printf("exponentiating p = %v done\n")
 	p.phi, tmp1.phi = tmp1.phi, p.phi
 }
 
