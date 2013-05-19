@@ -3,11 +3,11 @@ package aks
 import "fmt"
 import "math/big"
 
-// A BigIntPoly represents a polynomial with big.Int coefficients mod
+// A bigIntPoly represents a polynomial with big.Int coefficients mod
 // some (N, X^R - 1).
 //
-// The zero value for a BigIntPoly represents the zero polynomial.
-type BigIntPoly struct {
+// The zero value for a bigIntPoly represents the zero polynomial.
+type bigIntPoly struct {
 	R int
 	// k is the number of big.Words required to hold a coefficient
 	// in calculations without overflowing.
@@ -28,9 +28,9 @@ type BigIntPoly struct {
 // Only polynomials built with the same value of N and R may be used
 // together in one of the functions below.
 
-// Builds a new BigIntPoly representing the zero polynomial
+// Builds a new bigIntPoly representing the zero polynomial
 // mod (N, X^R - 1). R must fit into an int.
-func NewBigIntPoly(N, R big.Int) *BigIntPoly {
+func newBigIntPoly(N, R big.Int) *bigIntPoly {
 	// A coefficient can be up to R*(N - 1)^2 in intermediate
 	// calculations.
 	var maxCoefficient big.Int
@@ -45,12 +45,12 @@ func NewBigIntPoly(N, R big.Int) *BigIntPoly {
 	// calculations.
 	maxWordCount := 2 * rInt * k
 	phi.SetBits(make([]big.Word, maxWordCount))
-	return &BigIntPoly{rInt, k, phi}
+	return &bigIntPoly{rInt, k, phi}
 }
 
 // Returns 1 + the degree of this polynomial, or 0 if the polynomial
 // is the zero polynomial.
-func (p *BigIntPoly) getCoefficientCount() int {
+func (p *bigIntPoly) getCoefficientCount() int {
 	l := len(p.phi.Bits())
 	if l == 0 {
 		return 0
@@ -65,13 +65,13 @@ func (p *BigIntPoly) getCoefficientCount() int {
 // Sets the coefficient count to the given number, which must be at
 // most p.R. The unused bytes of the leading coefficient must be
 // cleared (via commitCoefficient()) prior to this being called.
-func (p *BigIntPoly) setCoefficientCount(coefficientCount int) {
+func (p *bigIntPoly) setCoefficientCount(coefficientCount int) {
 	p.phi.SetBits(p.phi.Bits()[0 : coefficientCount*p.k])
 }
 
 // Returns the ith coefficient of this polynomial. i must be less than
 // p.getCoefficientCount().
-func (p *BigIntPoly) getCoefficient(i int) big.Int {
+func (p *bigIntPoly) getCoefficient(i int) big.Int {
 	var c big.Int
 	start := i * p.k
 	end := (i + 1) * p.k
@@ -85,7 +85,7 @@ func (p *BigIntPoly) getCoefficient(i int) big.Int {
 // after all changes have been made to a coefficient via a big.Int
 // returned from p.getCoefficient(). Also must be called on the
 // leading coefficient before p.setCoefficientCount() is called.
-func (p *BigIntPoly) commitCoefficient(c big.Int) {
+func (p *bigIntPoly) commitCoefficient(c big.Int) {
 	cBits := c.Bits()
 	unusedBits := cBits[len(cBits):p.k]
 	for j := 0; j < len(unusedBits); j++ {
@@ -94,7 +94,7 @@ func (p *BigIntPoly) commitCoefficient(c big.Int) {
 }
 
 // Sets p to X^k + a mod (N, X^R - 1).
-func (p *BigIntPoly) Set(a, k, N big.Int) {
+func (p *bigIntPoly) Set(a, k, N big.Int) {
 	c0 := p.getCoefficient(0)
 	c0.Mod(&a, &N)
 	p.commitCoefficient(c0)
@@ -118,13 +118,13 @@ func (p *BigIntPoly) Set(a, k, N big.Int) {
 }
 
 // Returns whether p has the same coefficients as q.
-func (p *BigIntPoly) Eq(q *BigIntPoly) bool {
+func (p *bigIntPoly) Eq(q *bigIntPoly) bool {
 	return p.phi.Cmp(&q.phi) == 0
 }
 
 // Sets p to the product of p and q mod (N, X^R - 1). Assumes R >=
 // 2. tmp must not alias p or q.
-func (p *BigIntPoly) mul(q *BigIntPoly, N big.Int, tmp *BigIntPoly) {
+func (p *bigIntPoly) mul(q *bigIntPoly, N big.Int, tmp *bigIntPoly) {
 	tmp.phi.Mul(&p.phi, &q.phi)
 	p.phi, tmp.phi = tmp.phi, p.phi
 
@@ -178,7 +178,7 @@ func (p *BigIntPoly) mul(q *BigIntPoly, N big.Int, tmp *BigIntPoly) {
 
 // Sets p to p^N mod (N, X^R - 1), where R is the size of p. tmp1 and
 // tmp2 must not alias each other or p.
-func (p *BigIntPoly) Pow(N big.Int, tmp1, tmp2 *BigIntPoly) {
+func (p *bigIntPoly) Pow(N big.Int, tmp1, tmp2 *bigIntPoly) {
 	tmp1.phi.Set(&p.phi)
 
 	for i := N.BitLen() - 2; i >= 0; i-- {
@@ -192,7 +192,7 @@ func (p *BigIntPoly) Pow(N big.Int, tmp1, tmp2 *BigIntPoly) {
 }
 
 // fmt.Formatter implementation.
-func (p *BigIntPoly) Format(f fmt.State, c rune) {
+func (p *bigIntPoly) Format(f fmt.State, c rune) {
 	if p.phi.Sign() == 0 {
 		fmt.Fprint(f, "0")
 		return

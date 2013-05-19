@@ -14,7 +14,7 @@ const (
 
 // Fill p's unused bits with non-zero data. This helps in flushing out
 // any bugs related to relying on memory to be zeroed.
-func fuzzBigIntPoly(p *BigIntPoly) {
+func fuzzBigIntPoly(p *bigIntPoly) {
 	bits := p.phi.Bits()
 	unusedBits := bits[len(bits):cap(bits)]
 	for i := 0; i < len(unusedBits); i++ {
@@ -35,14 +35,14 @@ func calculatePhi(coefficients []big.Int, k int) big.Int {
 }
 
 // Returns whether p has exactly the given list of coefficients.
-func bigIntPolyHasCoefficients(p *BigIntPoly, coefficients []big.Int) bool {
+func bigIntPolyHasCoefficients(p *bigIntPoly, coefficients []big.Int) bool {
 	e := calculatePhi(coefficients, p.k)
 	return p.phi.Cmp(&e) == 0
 }
 
 // Returns whether p has exactly the given list of int64 coefficients.
 func bigIntPolyHasInt64Coefficients(
-	p *BigIntPoly, int64Coefficients []int64) bool {
+	p *bigIntPoly, int64Coefficients []int64) bool {
 	coefficients := make([]big.Int, len(int64Coefficients))
 	for i := 0; i < len(coefficients); i++ {
 		coefficients[i] = *big.NewInt(int64Coefficients[i])
@@ -51,7 +51,7 @@ func bigIntPolyHasInt64Coefficients(
 }
 
 // Dumps p to a string.
-func dumpBigIntPoly(p *BigIntPoly) string {
+func dumpBigIntPoly(p *bigIntPoly) string {
 	s := ""
 	for i := p.getCoefficientCount() - 1; i >= 0; i-- {
 		c := p.getCoefficient(i)
@@ -68,25 +68,25 @@ func dumpBigIntPoly(p *BigIntPoly) string {
 	return s
 }
 
-// NewBigIntPoly(k, a, N, R) should return the zero polynomial
+// newBigIntPoly(k, a, N, R) should return the zero polynomial
 // mod (N, X^R - 1).
 func TestNewBigIntPoly(t *testing.T) {
 	N := *big.NewInt(10)
 	R := *big.NewInt(5)
-	p := NewBigIntPoly(N, R)
+	p := newBigIntPoly(N, R)
 	fuzzBigIntPoly(p)
 	if !bigIntPolyHasInt64Coefficients(p, []int64{}) {
 		t.Error(dumpBigIntPoly(p))
 	}
 }
 
-// BigIntPoly.Set() should set the polynomial to X^(k % R) + (a % N).
+// bigIntPoly.Set() should set the polynomial to X^(k % R) + (a % N).
 func TestBigIntPolySet(t *testing.T) {
 	a := *big.NewInt(12)
 	k := *big.NewInt(6)
 	N := *big.NewInt(10)
 	R := *big.NewInt(5)
-	p := NewBigIntPoly(N, R)
+	p := newBigIntPoly(N, R)
 	p.Set(a, k, N)
 	fuzzBigIntPoly(p)
 	if !bigIntPolyHasInt64Coefficients(p, []int64{2, 1}) {
@@ -107,13 +107,13 @@ func TestBigIntPolyEq(t *testing.T) {
 	N := *big.NewInt(10)
 	R := *big.NewInt(5)
 
-	p := NewBigIntPoly(N, R)
+	p := newBigIntPoly(N, R)
 	p.Set(*big.NewInt(1), *big.NewInt(2), N)
 	fuzzBigIntPoly(p)
-	q := NewBigIntPoly(N, R)
+	q := newBigIntPoly(N, R)
 	q.Set(*big.NewInt(1), *big.NewInt(3), N)
 	fuzzBigIntPoly(q)
-	r := NewBigIntPoly(N, R)
+	r := newBigIntPoly(N, R)
 	r.Set(*big.NewInt(2), *big.NewInt(3), N)
 	fuzzBigIntPoly(r)
 
@@ -154,10 +154,10 @@ func TestBigIntPolyMul(t *testing.T) {
 	R := *big.NewInt(5)
 
 	// p = X^3 + 4.
-	p := NewBigIntPoly(N, R)
+	p := newBigIntPoly(N, R)
 	p.Set(*big.NewInt(4), *big.NewInt(3), N)
 	fuzzBigIntPoly(p)
-	tmp := NewBigIntPoly(N, R)
+	tmp := newBigIntPoly(N, R)
 	fuzzBigIntPoly(tmp)
 	// p^2 = (X^3 + 4)^2 = X^6 + 8X^3 + 16 which should be equal
 	// to 8X^3 + X + 6 mod (10, X^5 - 1).
@@ -179,7 +179,7 @@ func TestBigIntPolyMulLarge(t *testing.T) {
 	rInt := int(R.Int64())
 
 	// p = X^{N-1} + (N-1).
-	p := NewBigIntPoly(N, R)
+	p := newBigIntPoly(N, R)
 	if p.k != 5 {
 		t.Error(dumpBigIntPoly(p))
 	}
@@ -191,7 +191,7 @@ func TestBigIntPolyMulLarge(t *testing.T) {
 	// p^2 = (X^{N-1} + (N-1))^2 = X^{2(N-1)} + 2(N-1) + (N-1)^2,
 	// which should be equal to (N-2)X^{R-1} + X^{R-2} + 1. (The
 	// div/mod operations should put their results in-place.)
-	tmp := NewBigIntPoly(N, R)
+	tmp := newBigIntPoly(N, R)
 	fuzzBigIntPoly(tmp)
 	p.mul(p, N, tmp)
 
@@ -215,7 +215,7 @@ func TestBigIntPolyMulLeadingCoefficient(t *testing.T) {
 	R.Lsh(one, 10)
 
 	// p = sqrt(N)X^{R/2}.
-	p := NewBigIntPoly(N, R)
+	p := newBigIntPoly(N, R)
 	if p.k != 2 {
 		t.Error(p.k)
 	}
@@ -230,7 +230,7 @@ func TestBigIntPolyMulLeadingCoefficient(t *testing.T) {
 	fuzzBigIntPoly(p)
 
 	// p^2 = NX^R, which should be equal to 0 mod (N, R).
-	tmp := NewBigIntPoly(N, R)
+	tmp := newBigIntPoly(N, R)
 	fuzzBigIntPoly(tmp)
 	p.mul(p, N, tmp)
 
@@ -254,7 +254,7 @@ func TestBigIntPolyMulLeadingCoefficientUnusedBytes(t *testing.T) {
 	R.Sub(&R, one)
 
 	// p = X, which should take up 4 words.
-	p := NewBigIntPoly(N, R)
+	p := newBigIntPoly(N, R)
 	if p.k != 3 {
 		t.Error(dumpBigIntPoly(p))
 	}
@@ -265,7 +265,7 @@ func TestBigIntPolyMulLeadingCoefficientUnusedBytes(t *testing.T) {
 	// p^2 = X^2, which should take up 7 words. The unused 2 words
 	// for the leading coefficient should not affect the result of
 	// the multiplication.
-	tmp := NewBigIntPoly(N, R)
+	tmp := newBigIntPoly(N, R)
 	fuzzBigIntPoly(tmp)
 	p.mul(p, N, tmp)
 
@@ -281,15 +281,15 @@ func TestBigIntPolyPow(t *testing.T) {
 	N := *big.NewInt(101)
 	R := *big.NewInt(53)
 
-	p := NewBigIntPoly(N, R)
+	p := newBigIntPoly(N, R)
 	p.Set(a, *big.NewInt(1), N)
 	fuzzBigIntPoly(p)
-	tmp1 := NewBigIntPoly(N, R)
-	tmp2 := NewBigIntPoly(N, R)
+	tmp1 := newBigIntPoly(N, R)
+	tmp2 := newBigIntPoly(N, R)
 	fuzzBigIntPoly(tmp1)
 	fuzzBigIntPoly(tmp2)
 	p.Pow(N, tmp1, tmp2)
-	q := NewBigIntPoly(N, R)
+	q := newBigIntPoly(N, R)
 	q.Set(a, N, N)
 	fuzzBigIntPoly(q)
 	if p.phi.Cmp(&q.phi) != 0 {
@@ -303,14 +303,14 @@ func TestBigIntPolyFormat(t *testing.T) {
 	N := *big.NewInt(101)
 	R := *big.NewInt(53)
 
-	p := &BigIntPoly{}
+	p := &bigIntPoly{}
 	fuzzBigIntPoly(p)
 	str := fmt.Sprint(p)
 	if str != "0" {
 		t.Error(dumpBigIntPoly(p), str)
 	}
 
-	p = NewBigIntPoly(N, R)
+	p = newBigIntPoly(N, R)
 	p.Set(*big.NewInt(2), *big.NewInt(3), N)
 	fuzzBigIntPoly(p)
 	str = fmt.Sprint(p)
@@ -318,7 +318,7 @@ func TestBigIntPolyFormat(t *testing.T) {
 		t.Error(dumpBigIntPoly(p), str)
 	}
 
-	p = NewBigIntPoly(N, R)
+	p = newBigIntPoly(N, R)
 	p.Set(*big.NewInt(1), *big.NewInt(1), N)
 	fuzzBigIntPoly(p)
 	str = fmt.Sprint(p)

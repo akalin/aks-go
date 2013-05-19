@@ -29,9 +29,9 @@ func runIsAKSWitnessBenchmark(b *testing.B, numDigits int64) {
 	// Any a > 1 suffices.
 	a := big.NewInt(2)
 
-	tmp1 := NewBigIntPoly(*n, *r)
-	tmp2 := NewBigIntPoly(*n, *r)
-	tmp3 := NewBigIntPoly(*n, *r)
+	tmp1 := newBigIntPoly(*n, *r)
+	tmp2 := newBigIntPoly(*n, *r)
+	tmp3 := newBigIntPoly(*n, *r)
 
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
@@ -72,9 +72,9 @@ func BenchmarkIsAKSWitnessMax32(b *testing.B) {
 	// Any a > 1 suffices.
 	a := big.NewInt(2)
 
-	tmp1 := NewBigIntPoly(*n, *r)
-	tmp2 := NewBigIntPoly(*n, *r)
-	tmp3 := NewBigIntPoly(*n, *r)
+	tmp1 := newBigIntPoly(*n, *r)
+	tmp2 := newBigIntPoly(*n, *r)
+	tmp3 := newBigIntPoly(*n, *r)
 
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {

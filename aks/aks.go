@@ -4,9 +4,9 @@ import "log"
 import "math/big"
 
 // Returns whether (X + a)^n = X^n + a mod (n, X^r - 1). tmp1, tmp2,
-// and tmp3 must be BigIntPoly objects constructed with N, R = n, r,
+// and tmp3 must be bigIntPoly objects constructed with N, R = n, r,
 // and they must not alias each other.
-func isAKSWitness(n, a big.Int, tmp1, tmp2, tmp3 *BigIntPoly) bool {
+func isAKSWitness(n, a big.Int, tmp1, tmp2, tmp3 *bigIntPoly) bool {
 	// Left-hand side: (X + a)^n mod (n, X^r - 1).
 	tmp1.Set(a, *big.NewInt(1), n)
 	tmp1.Pow(n, tmp2, tmp3)
@@ -21,9 +21,9 @@ func isAKSWitness(n, a big.Int, tmp1, tmp2, tmp3 *BigIntPoly) bool {
 // Returns the first AKS witness of n with the parameters r and M, or
 // nil if there isn't one.
 func getFirstAKSWitness(n, r, M *big.Int, logger *log.Logger) *big.Int {
-	tmp1 := NewBigIntPoly(*n, *r)
-	tmp2 := NewBigIntPoly(*n, *r)
-	tmp3 := NewBigIntPoly(*n, *r)
+	tmp1 := newBigIntPoly(*n, *r)
+	tmp2 := newBigIntPoly(*n, *r)
+	tmp3 := newBigIntPoly(*n, *r)
 
 	for a := big.NewInt(1); a.Cmp(M) < 0; a.Add(a, big.NewInt(1)) {
 		logger.Printf("Testing %v (M = %v)...\n", a, M)
@@ -48,9 +48,9 @@ func testAKSWitnesses(
 	numberCh chan *big.Int,
 	resultCh chan witnessResult,
 	logger *log.Logger) {
-	tmp1 := NewBigIntPoly(*n, *r)
-	tmp2 := NewBigIntPoly(*n, *r)
-	tmp3 := NewBigIntPoly(*n, *r)
+	tmp1 := newBigIntPoly(*n, *r)
+	tmp2 := newBigIntPoly(*n, *r)
+	tmp3 := newBigIntPoly(*n, *r)
 
 	for a := range numberCh {
 		logger.Printf("Testing %v...\n", a)
