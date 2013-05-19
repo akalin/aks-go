@@ -119,7 +119,7 @@ func calculateAKSModulusUpperBound(n *big.Int) *big.Int {
 	ceilLgN := big.NewInt(int64(n.BitLen()))
 	rUpperBound := &big.Int{}
 	rUpperBound.Exp(ceilLgN, five, nil)
-	rUpperBound = Max(rUpperBound, three)
+	rUpperBound = max(rUpperBound, three)
 
 	var nMod8 big.Int
 	nMod8.Mod(n, eight)
@@ -128,7 +128,7 @@ func calculateAKSModulusUpperBound(n *big.Int) *big.Int {
 		var rUpperBound2 big.Int
 		rUpperBound2.Exp(ceilLgN, two, nil)
 		rUpperBound2.Mul(&rUpperBound2, eight)
-		rUpperBound = Min(rUpperBound, &rUpperBound2)
+		rUpperBound = min(rUpperBound, &rUpperBound2)
 	}
 	return rUpperBound
 }
@@ -149,7 +149,7 @@ func CalculateAKSModulus(n *big.Int) *big.Int {
 		if gcd.Cmp(one) != 0 {
 			continue
 		}
-		o := CalculateMultiplicativeOrder(n, &r)
+		o := calculateMultiplicativeOrder(n, &r)
 		if o.Cmp(ceilLgNSq) > 0 {
 			return &r
 		}
@@ -163,7 +163,7 @@ func CalculateAKSUpperBound(n, r *big.Int) *big.Int {
 	one := big.NewInt(1)
 	two := big.NewInt(2)
 
-	M := CalculateEulerPhi(r)
+	M := calculateEulerPhi(r)
 	M = FloorRoot(M, two)
 	M.Mul(M, big.NewInt(int64(n.BitLen())))
 	M.Add(M, one)
@@ -175,7 +175,7 @@ func GetFirstFactorBelow(n, M *big.Int) *big.Int {
 	var factor *big.Int
 	var mMinusOne big.Int
 	mMinusOne.Sub(M, big.NewInt(1))
-	TrialDivide(n, func(q, e *big.Int) bool {
+	trialDivide(n, func(q, e *big.Int) bool {
 		if q.Cmp(M) < 0 && q.Cmp(n) < 0 {
 			factor = q
 		}

@@ -67,17 +67,17 @@ func TestFloorRootMidwayBetweenExactPowers(t *testing.T) {
 func TestCalculateEulerPhiPrime(t *testing.T) {
 	one := big.NewInt(1)
 
-	phi := CalculateEulerPhiPrimePower(big.NewInt(2), one)
+	phi := calculateEulerPhiPrimePower(big.NewInt(2), one)
 	if phi.Cmp(one) != 0 {
 		t.Error(phi)
 	}
 
-	phi = CalculateEulerPhiPrimePower(big.NewInt(3), one)
+	phi = calculateEulerPhiPrimePower(big.NewInt(3), one)
 	if phi.Cmp(big.NewInt(2)) != 0 {
 		t.Error(phi)
 	}
 
-	phi = CalculateEulerPhiPrimePower(big.NewInt(103), one)
+	phi = calculateEulerPhiPrimePower(big.NewInt(103), one)
 	if phi.Cmp(big.NewInt(102)) != 0 {
 		t.Error(phi)
 	}
@@ -85,7 +85,7 @@ func TestCalculateEulerPhiPrime(t *testing.T) {
 
 // Phi(p^k) should return p^(k-1)*(p-1) for prime p.
 func TestCalculateEulerPhiPrimePower(t *testing.T) {
-	phi := CalculateEulerPhiPrimePower(big.NewInt(3), big.NewInt(5))
+	phi := calculateEulerPhiPrimePower(big.NewInt(3), big.NewInt(5))
 	if phi.Cmp(big.NewInt(162)) != 0 {
 		t.Error(phi)
 	}
@@ -101,13 +101,13 @@ func makeFactors(int64Factors [][2]int64) [][2]*big.Int {
 	return factors
 }
 
-// Returns a FactorFunction which compares its given factors to each
+// Returns a factorFunction which compares its given factors to each
 // successive element in the given list of factors.
 func makeExpectingFactorFunction(
 	n int64,
 	int64Factors [][2]int64,
 	comparedFactors *int,
-	t *testing.T) FactorFunction {
+	t *testing.T) factorFunction {
 	expectedFactors := makeFactors(int64Factors)
 	*comparedFactors = 0
 	return func(p, m *big.Int) bool {
@@ -130,11 +130,11 @@ func makeExpectingFactorFunction(
 	}
 }
 
-// Tests that TrialDivide run with the given number gives the expected
+// Tests that trialDivide run with the given number gives the expected
 // list of factors.
 func testTrialDivide(n int64, expectedFactors [][2]int64, t *testing.T) {
 	comparedFactors := 0
-	TrialDivide(
+	trialDivide(
 		big.NewInt(n),
 		makeExpectingFactorFunction(
 			n, expectedFactors, &comparedFactors, t),
@@ -144,7 +144,7 @@ func testTrialDivide(n int64, expectedFactors [][2]int64, t *testing.T) {
 	}
 }
 
-// Test TrialDivide with small numbers.
+// Test trialDivide with small numbers.
 func TestTrialDivideSmall(t *testing.T) {
 	testTrialDivide(0, [][2]int64{}, t)
 	testTrialDivide(1, [][2]int64{}, t)
@@ -159,15 +159,15 @@ func TestTrialDivideSmall(t *testing.T) {
 	testTrialDivide(10, [][2]int64{{2, 1}, {5, 1}}, t)
 }
 
-// Test TrialDivide with some larger numbers.
+// Test trialDivide with some larger numbers.
 func TestTrialDivideLarge(t *testing.T) {
 	testTrialDivide(100, [][2]int64{{2, 2}, {5, 2}}, t)
 	testTrialDivide(101, [][2]int64{{101, 1}}, t)
 	testTrialDivide(1961, [][2]int64{{37, 1}, {53, 1}}, t)
 }
 
-// Make sure TrialDivide respects the return value of its
-// FactorFunction.
+// Make sure trialDivide respects the return value of its
+// factorFunction.
 func TestTrialDividePartial(t *testing.T) {
 	var n int64 = 100
 	expectedFactors := [][2]int64{{2, 2}}
@@ -181,18 +181,18 @@ func TestTrialDividePartial(t *testing.T) {
 		}
 		return expectingFactorFunction(p, m)
 	}
-	TrialDivide(big.NewInt(n), partialFactorFunction, nil)
+	trialDivide(big.NewInt(n), partialFactorFunction, nil)
 	if comparedFactors != len(expectedFactors) {
 		t.Error(comparedFactors, len(expectedFactors))
 	}
 }
 
 func calculateMultiplicativeOrderPrimePowerSmall(a, p, k int64) int64 {
-	return CalculateMultiplicativeOrderPrimePower(
+	return calculateMultiplicativeOrderPrimePower(
 		big.NewInt(a), big.NewInt(p), big.NewInt(k)).Int64()
 }
 
-// Check CalculateMultiplicativeOrderPrimePower() with some small test
+// Check calculateMultiplicativeOrderPrimePower() with some small test
 // cases.
 func TestCalculateMultiplicativeOrderPrimePower(t *testing.T) {
 	e := calculateMultiplicativeOrderPrimePowerSmall(4, 7, 1)
@@ -207,11 +207,11 @@ func TestCalculateMultiplicativeOrderPrimePower(t *testing.T) {
 }
 
 func calculateMultiplicativeOrderSmall(a, n int64) int64 {
-	return CalculateMultiplicativeOrder(
+	return calculateMultiplicativeOrder(
 		big.NewInt(a), big.NewInt(n)).Int64()
 }
 
-// Check CalculateMultiplicativeOrder() with a small test case.
+// Check calculateMultiplicativeOrder() with a small test case.
 func TestCalculateMultiplicativeOrder(t *testing.T) {
 	e := calculateMultiplicativeOrderSmall(3, 25600)
 	if e != 1280 {
@@ -219,10 +219,10 @@ func TestCalculateMultiplicativeOrder(t *testing.T) {
 	}
 }
 
-// Check CalculateEulerPhi() with a small test case.
+// Check calculateEulerPhi() with a small test case.
 func TestCalculateEulerPhi(t *testing.T) {
 	// 3888 = 2^4 * 3^5.
-	phi := CalculateEulerPhi(big.NewInt(3888))
+	phi := calculateEulerPhi(big.NewInt(3888))
 	// phi(3888) = phi(2^4) * phi(3^5) = 2^3 * 3^4 * 2 = 6^4 = 1296.
 	if phi.Cmp(big.NewInt(1296)) != 0 {
 		t.Error(phi)

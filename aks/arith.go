@@ -4,7 +4,7 @@ import "math/big"
 
 // Returns the smaller of x and y. No copies are made, so the returned
 // pointer is either x or y.
-func Min(x, y *big.Int) *big.Int {
+func min(x, y *big.Int) *big.Int {
 	if x.Cmp(y) < 0 {
 		return x
 	}
@@ -13,7 +13,7 @@ func Min(x, y *big.Int) *big.Int {
 
 // Returns the larger of x and y. No copies are made, so the returned
 // pointer is either x or y.
-func Max(x, y *big.Int) *big.Int {
+func max(x, y *big.Int) *big.Int {
 	if x.Cmp(y) > 0 {
 		return x
 	}
@@ -68,7 +68,7 @@ func FloorRoot(x, k *big.Int) *big.Int {
 }
 
 // Assuming p is prime, calculates and returns Phi(p^k) quickly.
-func CalculateEulerPhiPrimePower(p, k *big.Int) *big.Int {
+func calculateEulerPhiPrimePower(p, k *big.Int) *big.Int {
 	var pMinusOne, kMinusOne big.Int
 	pMinusOne.Sub(p, big.NewInt(1))
 	kMinusOne.Sub(k, big.NewInt(1))
@@ -78,14 +78,14 @@ func CalculateEulerPhiPrimePower(p, k *big.Int) *big.Int {
 	return &phi
 }
 
-// A FactorFunction takes a prime and its multiplicity and returns
+// A factorFunction takes a prime and its multiplicity and returns
 // whether or not to continue trying to find more factors.
-type FactorFunction func(p, m *big.Int) bool
+type factorFunction func(p, m *big.Int) bool
 
 // Does trial division to find factors of n and passes them to the
-// given FactorFunction until it indicates otherwise. If upperBound is
+// given factorFunction until it indicates otherwise. If upperBound is
 // not nil, only factors less than or equal to it will be tried.
-func TrialDivide(n *big.Int, factorFn FactorFunction, upperBound *big.Int) {
+func trialDivide(n *big.Int, factorFn factorFunction, upperBound *big.Int) {
 	one := big.NewInt(1)
 	two := big.NewInt(2)
 	three := big.NewInt(3)
@@ -120,7 +120,7 @@ func TrialDivide(n *big.Int, factorFn FactorFunction, upperBound *big.Int) {
 				break
 			}
 			t = &q
-			upperBound = Min(upperBound, t)
+			upperBound = min(upperBound, t)
 			m.Add(&m, one)
 		}
 		if m.Sign() != 0 {
@@ -165,10 +165,10 @@ func TrialDivide(n *big.Int, factorFn FactorFunction, upperBound *big.Int) {
 
 // Assuming that p is prime and a and p^k are coprime, returns the
 // smallest power e of a such that a^e = 1 (mod p^k).
-func CalculateMultiplicativeOrderPrimePower(a, p, k *big.Int) *big.Int {
+func calculateMultiplicativeOrderPrimePower(a, p, k *big.Int) *big.Int {
 	var n big.Int
 	n.Exp(p, k, nil)
-	t := CalculateEulerPhiPrimePower(p, k)
+	t := calculateEulerPhiPrimePower(p, k)
 
 	o := big.NewInt(1)
 	one := big.NewInt(1)
@@ -193,17 +193,17 @@ func CalculateMultiplicativeOrderPrimePower(a, p, k *big.Int) *big.Int {
 
 	var pMinusOne big.Int
 	pMinusOne.Sub(p, one)
-	TrialDivide(&pMinusOne, processPrimeFactor, nil)
+	trialDivide(&pMinusOne, processPrimeFactor, nil)
 
 	return o
 }
 
 // Assuming that a and n are coprime, returns the smallest power e of
 // a such that a^e = 1 (mod n).
-func CalculateMultiplicativeOrder(a, n *big.Int) *big.Int {
+func calculateMultiplicativeOrder(a, n *big.Int) *big.Int {
 	o := big.NewInt(1)
-	TrialDivide(n, func(q, e *big.Int) bool {
-		oq := CalculateMultiplicativeOrderPrimePower(a, q, e)
+	trialDivide(n, func(q, e *big.Int) bool {
+		oq := calculateMultiplicativeOrderPrimePower(a, q, e)
 		// Set o to lcm(o, oq).
 		var gcd big.Int
 		gcd.GCD(nil, nil, o, oq)
@@ -215,10 +215,10 @@ func CalculateMultiplicativeOrder(a, n *big.Int) *big.Int {
 }
 
 // Calculate Phi(n) by factorizing it.
-func CalculateEulerPhi(n *big.Int) *big.Int {
+func calculateEulerPhi(n *big.Int) *big.Int {
 	phi := big.NewInt(1)
-	TrialDivide(n, func(q, e *big.Int) bool {
-		phi.Mul(phi, CalculateEulerPhiPrimePower(q, e))
+	trialDivide(n, func(q, e *big.Int) bool {
+		phi.Mul(phi, calculateEulerPhiPrimePower(q, e))
 		return true
 	}, nil)
 	return phi
