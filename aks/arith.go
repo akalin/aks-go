@@ -22,7 +22,7 @@ func max(x, y *big.Int) *big.Int {
 
 // Returns the greatest number y such that y^k <= x. x must be
 // non-negative and k must be positive.
-func FloorRoot(x, k *big.Int) *big.Int {
+func floorRoot(x, k *big.Int) *big.Int {
 	if x.Sign() < 0 {
 		panic("negative radicand")
 	}
@@ -103,7 +103,7 @@ func trialDivide(n *big.Int, factorFn factorFunction, upperBound *big.Int) {
 	}
 
 	if upperBound == nil {
-		upperBound = FloorRoot(n, two)
+		upperBound = floorRoot(n, two)
 	}
 
 	t := &big.Int{}

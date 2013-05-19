@@ -76,8 +76,10 @@ func main() {
 	}
 
 	fmt.Printf("n has no factor less than %v\n", M)
-	sqrtN := aks.FloorRoot(&n, two)
-	if M.Cmp(sqrtN) > 0 {
+	// M^2 > N iff M > floor(sqrt(N)).
+	var mSq big.Int
+	mSq.Mul(M, M)
+	if mSq.Cmp(&n) > 0 {
 		fmt.Printf("%v is greater than sqrt(%v), so %v is prime\n",
 			M, &n, &n)
 		return

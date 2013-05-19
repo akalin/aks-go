@@ -164,7 +164,7 @@ func CalculateAKSUpperBound(n, r *big.Int) *big.Int {
 	two := big.NewInt(2)
 
 	M := calculateEulerPhi(r)
-	M = FloorRoot(M, two)
+	M = floorRoot(M, two)
 	M.Mul(M, big.NewInt(int64(n.BitLen())))
 	M.Add(M, one)
 	return M

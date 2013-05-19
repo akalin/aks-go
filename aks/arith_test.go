@@ -10,10 +10,10 @@ func expSmall(x, y int64) int64 {
 }
 
 func floorRootSmall(x, y int64) int64 {
-	return FloorRoot(big.NewInt(x), big.NewInt(y)).Int64()
+	return floorRoot(big.NewInt(x), big.NewInt(y)).Int64()
 }
 
-// FloorRoot(x^y, y) should always yield x.
+// floorRoot(x^y, y) should always yield x.
 func TestFloorRootExactPowers(t *testing.T) {
 	for i := int64(0); i < 16; i++ {
 		for j := int64(1); j < 16; j++ {
@@ -25,7 +25,7 @@ func TestFloorRootExactPowers(t *testing.T) {
 	}
 }
 
-// FloorRoot(x^y + 1, y) should yield x for x >= 1 and y >= 2.
+// floorRoot(x^y + 1, y) should yield x for x >= 1 and y >= 2.
 func TestFloorRootSlightlyOverExactPower(t *testing.T) {
 	for i := int64(1); i < 16; i++ {
 		for j := int64(2); j < 16; j++ {
@@ -37,7 +37,7 @@ func TestFloorRootSlightlyOverExactPower(t *testing.T) {
 	}
 }
 
-// FloorRoot((x + 1)^y - 1, y) should yield x for x >= 1 and y >= 2.
+// floorRoot((x + 1)^y - 1, y) should yield x for x >= 1 and y >= 2.
 func TestFloorRootSlightlyUnderExactPower(t *testing.T) {
 	for i := int64(1); i < 16; i++ {
 		for j := int64(2); j < 16; j++ {
@@ -49,7 +49,7 @@ func TestFloorRootSlightlyUnderExactPower(t *testing.T) {
 	}
 }
 
-// FloorRoot((x^y + (x + 1)^y) / 2, y) should yield x for x >= 1 and y
+// floorRoot((x^y + (x + 1)^y) / 2, y) should yield x for x >= 1 and y
 // >= 2.
 func TestFloorRootMidwayBetweenExactPowers(t *testing.T) {
 	for i := int64(1); i < 16; i++ {
