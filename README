@@ -1,21 +1,33 @@
 This is an implementation of the AKS primality test (
 http://en.wikipedia.org/wiki/AKS_algorithm ) in Go.
 
-To build:
-
-go build *.go
-
-To test:
-
-go test *.go
-
 To run:
+
+cd bin-src/aks
+go build
 
 # Should indicate composite.
 ./aks 2993374621
 
 # Should indicate prime.
 ./aks 2685241991
+
+To use in your code:
+
+import "github.com/akalin/aks-go/aks"
+
+var n big.Int
+// Set n to the number you wish to test.
+var jobs int
+// Set jobs to the number of goroutines to use when testing n.
+r := aks.CalculateAKSModulus(&n)
+M := aks.CalculateAKSUpperBound(&n, r)
+a := aks.GetAKSWitness(&n, r, M, *jobs, log.New(os.Stderr, "", 0))
+if a != nil {
+	// n is composite with AKS witness a
+} else {
+	// n is prime
+}
 
 Use of this source code is governed by a BSD-style license that can be
 found in the LICENSE file.

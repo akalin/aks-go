@@ -1,4 +1,4 @@
-package main
+package aks
 
 import "fmt"
 import "math/big"

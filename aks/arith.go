@@ -1,4 +1,4 @@
-package main
+package aks
 
 import "math/big"
 

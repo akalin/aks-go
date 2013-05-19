@@ -1,4 +1,4 @@
-package main
+package aks
 
 import "io/ioutil"
 import "log"
@@ -25,7 +25,7 @@ func getFirstPrimeWithDigits(numDigits int64) *big.Int {
 func runIsAKSWitnessBenchmark(b *testing.B, numDigits int64) {
 	b.StopTimer()
 	n := getFirstPrimeWithDigits(numDigits)
-	r := calculateAKSModulus(n)
+	r := CalculateAKSModulus(n)
 	// Any a > 1 suffices.
 	a := big.NewInt(2)
 
@@ -68,7 +68,7 @@ func BenchmarkIsAKSWitness8Digits(b *testing.B) {
 func BenchmarkIsAKSWitnessMax32(b *testing.B) {
 	b.StopTimer()
 	n := big.NewInt(4294967291)
-	r := calculateAKSModulus(n)
+	r := CalculateAKSModulus(n)
 	// Any a > 1 suffices.
 	a := big.NewInt(2)
 
@@ -97,7 +97,7 @@ var nullLogger *log.Logger = log.New(ioutil.Discard, "", 0)
 func runGetFirstAKSWitnessBenchmark(b *testing.B, numDigits int64) {
 	b.StopTimer()
 	n := getFirstPrimeWithDigits(numDigits)
-	r := calculateAKSModulus(n)
+	r := CalculateAKSModulus(n)
 	M := big.NewInt(10)
 
 	b.StartTimer()
@@ -145,12 +145,12 @@ func BenchmarkGetFirstAKSWitness12Digits(b *testing.B) {
 func runGetAKSWitnessBenchmark(b *testing.B, numDigits int64) {
 	b.StopTimer()
 	n := getFirstPrimeWithDigits(numDigits)
-	r := calculateAKSModulus(n)
+	r := CalculateAKSModulus(n)
 	M := big.NewInt(10)
 
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
-		getAKSWitness(n, r, M, runtime.GOMAXPROCS(0), nullLogger)
+		GetAKSWitness(n, r, M, runtime.GOMAXPROCS(0), nullLogger)
 	}
 }
 
