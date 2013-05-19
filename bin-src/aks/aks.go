@@ -85,7 +85,8 @@ func main() {
 		return
 	}
 
-	a := aks.GetAKSWitness(&n, r, &end, *jobs, log.New(os.Stderr, "", 0))
+	logger := log.New(os.Stderr, "", 0)
+	a := aks.GetAKSWitness(&n, r, &big.Int{}, &end, *jobs, logger)
 	if a != nil {
 		fmt.Printf("n is composite with AKS witness %v\n", a)
 	} else if end.Cmp(M) < 0 {

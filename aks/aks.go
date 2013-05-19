@@ -64,7 +64,7 @@ func testAKSWitnesses(
 // Returns an AKS witness of n with the parameters r and M, or nil if
 // there isn't one. Tests up to maxOutstanding numbers at once.
 func GetAKSWitness(
-	n, r, M *big.Int,
+	n, r, start, end *big.Int,
 	maxOutstanding int,
 	logger *log.Logger) *big.Int {
 	numberCh := make(chan *big.Int, maxOutstanding)
@@ -74,31 +74,36 @@ func GetAKSWitness(
 		go testAKSWitnesses(n, r, numberCh, resultCh, logger)
 	}
 
-	// Send off all numbers for testing, draining any results that
-	// come in while we're doing so.
-	tested := big.NewInt(1)
-	for i := big.NewInt(1); i.Cmp(M) < 0; {
+	// Send off all numbers for testing (counted by i), draining
+	// any results that come in (counted by j) while we're doing
+	// so.
+	var i, j big.Int
+	i.Set(start)
+	j.Set(start)
+	logResult := func(result witnessResult) {
+		logger.Printf("%v isWitness=%t\n", result.a, result.isWitness)
+	}
+	for i.Cmp(end) < 0 {
 		select {
 		case result := <-resultCh:
-			tested.Add(tested, big.NewInt(1))
-			logger.Printf("%v isWitness=%t\n",
-				result.a, result.isWitness)
+			j.Add(&j, big.NewInt(1))
+			logResult(result)
 			if result.isWitness {
 				return result.a
 			}
 		default:
 			var a big.Int
-			a.Set(i)
+			a.Set(&i)
 			numberCh <- &a
-			i.Add(i, big.NewInt(1))
+			i.Add(&i, big.NewInt(1))
 		}
 	}
 
 	// Drain any remaining results.
-	for tested.Cmp(M) < 0 {
+	for j.Cmp(end) < 0 {
 		result := <-resultCh
-		tested.Add(tested, big.NewInt(1))
-		logger.Printf("%v isWitness=%t\n", result.a, result.isWitness)
+		j.Add(&j, big.NewInt(1))
+		logResult(result)
 		if result.isWitness {
 			return result.a
 		}

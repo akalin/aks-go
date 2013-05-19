@@ -22,7 +22,8 @@ var jobs int
 // Set jobs to the number of goroutines to use when testing n.
 r := aks.CalculateAKSModulus(&n)
 M := aks.CalculateAKSUpperBound(&n, r)
-a := aks.GetAKSWitness(&n, r, M, *jobs, log.New(os.Stderr, "", 0))
+logger := log.New(os.Stderr, "", 0)
+a := aks.GetAKSWitness(&n, r, &big.Int{}, M, jobs, logger)
 if a != nil {
 	// n is composite with AKS witness a
 } else {

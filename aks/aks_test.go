@@ -150,7 +150,8 @@ func runGetAKSWitnessBenchmark(b *testing.B, numDigits int64) {
 
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
-		GetAKSWitness(n, r, M, runtime.GOMAXPROCS(0), nullLogger)
+		GetAKSWitness(
+			n, r, &big.Int{}, M, runtime.GOMAXPROCS(0), nullLogger)
 	}
 }
 
