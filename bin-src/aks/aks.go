@@ -12,6 +12,8 @@ import "runtime/pprof"
 func main() {
 	jobs := flag.Int(
 		"j", runtime.NumCPU(), "how many processing jobs to spawn")
+	startStr := flag.String(
+		"start", "", "the lower bound to use (defaults to 1)")
 	endStr := flag.String(
 		"end", "", "the upper bound to use (defaults to M)")
 	cpuProfilePath :=
@@ -39,6 +41,16 @@ func main() {
 		defer pprof.StopCPUProfile()
 	}
 
+	var start big.Int
+	if len(*startStr) > 0 {
+		_, parsed := start.SetString(*startStr, 10)
+		if !parsed {
+			fmt.Fprintf(
+				os.Stderr, "could not parse %s\n", *startStr)
+			os.Exit(-1)
+		}
+	}
+
 	var end big.Int
 	if len(*endStr) > 0 {
 		_, parsed := end.SetString(*endStr, 10)
@@ -55,6 +67,7 @@ func main() {
 		os.Exit(-1)
 	}
 
+	one := big.NewInt(1)
 	two := big.NewInt(2)
 
 	if n.Cmp(two) < 0 {
@@ -65,10 +78,14 @@ func main() {
 	r := aks.CalculateAKSModulus(&n)
 	M := aks.CalculateAKSUpperBound(&n, r)
 
+	if start.Cmp(one) < 0 {
+		start.Set(one)
+	}
 	if end.Sign() <= 0 {
 		end.Set(M)
 	}
-	fmt.Printf("n = %v, r = %v, M = %v, end = %v\n", &n, r, M, &end)
+	fmt.Printf("n = %v, r = %v, M = %v, start = %v, end = %v\n",
+		&n, r, M, &start, &end)
 	factor := aks.GetFirstFactorBelow(&n, M)
 	if factor != nil {
 		fmt.Printf("n has factor %v\n", factor)
@@ -86,11 +103,12 @@ func main() {
 	}
 
 	logger := log.New(os.Stderr, "", 0)
-	a := aks.GetAKSWitness(&n, r, &big.Int{}, &end, *jobs, logger)
+	a := aks.GetAKSWitness(&n, r, &start, &end, *jobs, logger)
 	if a != nil {
 		fmt.Printf("n is composite with AKS witness %v\n", a)
-	} else if end.Cmp(M) < 0 {
-		fmt.Printf("n has no AKS witnesses < %v\n", &end)
+	} else if start.Cmp(one) > 0 || end.Cmp(M) < 0 {
+		fmt.Printf("n has no AKS witnesses >= %v and < %v\n",
+			&start, &end)
 	} else {
 		fmt.Printf("n is prime\n")
 	}

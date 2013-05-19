@@ -61,8 +61,9 @@ func testAKSWitnesses(
 	}
 }
 
-// Returns an AKS witness of n with the parameters r and M, or nil if
-// there isn't one. Tests up to maxOutstanding numbers at once.
+// Returns an AKS witness of n with the parameters r, start, and end,
+// or nil if there isn't one. Tests up to maxOutstanding numbers at
+// once.
 func GetAKSWitness(
 	n, r, start, end *big.Int,
 	maxOutstanding int,
