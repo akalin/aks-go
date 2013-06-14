@@ -56,3 +56,20 @@ func TestMpnSqr(t *testing.T) {
 		t.Error(limbs2, expectedLimbs2)
 	}
 }
+
+// mpnTdivQr() should perform division with remainder on its operands.
+func TestMpnTdivQr(t *testing.T) {
+	limbs1 := [4]Limb{10, 13, 22, 15}
+	limbs2 := [3]Limb{1, 2, 3}
+	limbs3 := [2]Limb{}
+	limbs4 := [3]Limb{}
+	mpnTdivQr(&limbs3[0], &limbs4[0], 0, &limbs1[0], 4, &limbs2[0], 3)
+	expectedLimbs3 := [2]Limb{4, 5}
+	if limbs3 != expectedLimbs3 {
+		t.Error(limbs3, expectedLimbs3)
+	}
+	expectedLimbs4 := [3]Limb{6, 0}
+	if limbs4 != expectedLimbs4 {
+		t.Error(limbs4, expectedLimbs4)
+	}
+}

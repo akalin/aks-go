@@ -65,3 +65,21 @@ func mpnSqr(rp, s1p *Limb, n Size) {
 		(*C.mp_limb_t)(s1p),
 		C.mp_size_t(n))
 }
+
+// Divide {np, nn} by {dp, dn} and put the quotient at {qp, nn-dn+1}
+// and the remainder at {rp, dn}. The quotient is rounded towards 0.
+//
+// No overlap is permitted between arguments, except that np might
+// equal rp. The dividend size nn must be greater than or equal to
+// divisor size dn. The most significant limb of the divisor must be
+// non-zero. The qxn operand must be zero.
+func mpnTdivQr(qp, rp *Limb, qxn Size, np *Limb, nn Size, dp *Limb, dn Size) {
+	C.mpn_tdiv_qr(
+		(*C.mp_limb_t)(qp),
+		(*C.mp_limb_t)(rp),
+		C.mp_size_t(qxn),
+		(*C.mp_limb_t)(np),
+		C.mp_size_t(nn),
+		(*C.mp_limb_t)(dp),
+		C.mp_size_t(dn))
+}
