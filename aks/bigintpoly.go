@@ -149,7 +149,7 @@ func (p *bigIntPoly) mul(q *bigIntPoly, N big.Int, tmp *bigIntPoly) {
 		tmpS = pS + qS
 	}
 	tmpBits := tmp.phi.Bits()
-	tmp.phi.SetBits(tmpBits[0 : tmpS])
+	tmp.phi.SetBits(tmpBits[0:tmpS])
 	p.phi, tmp.phi = tmp.phi, p.phi
 
 	// Mod p by X^R - 1.
@@ -181,16 +181,14 @@ func (p *bigIntPoly) mul(q *bigIntPoly, N big.Int, tmp *bigIntPoly) {
 
 	// Mod p by N.
 	newCoefficientCount := 0
-	tmp2 := tmp.getCoefficient(0)
-	tmp3 := tmp.getCoefficient(1)
+	tmpN, _ = bigIntAsMpn(&tmp.phi, _CAP)
 	for i := 0; i < oldCoefficientCount; i++ {
 		c := p.getCoefficient(i)
 		if c.Cmp(&N) >= 0 {
-			// Mod c by N. Use big.Int.QuoRem() instead of
-			// big.Int.Mod() since the latter allocates an
-			// extra big.Int.
-			tmp2.QuoRem(&c, &N, &tmp3)
-			c.Set(&tmp3)
+			cP, cN := bigIntAsMpn(&c, _LEN)
+			nP, nN := bigIntAsMpn(&N, _LEN)
+			mpnTdivQr(tmpN, cP, 0, cP, cN, nP, nN)
+			c.SetBits(c.Bits()[0:nN])
 			p.commitCoefficient(c)
 		}
 		if c.Sign() != 0 {
