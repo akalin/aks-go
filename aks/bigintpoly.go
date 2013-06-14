@@ -135,14 +135,21 @@ func (p *bigIntPoly) mul(q *bigIntPoly, N big.Int, tmp *bigIntPoly) {
 	}
 
 	pN, pS := bigIntAsMpn(&p.phi, _LEN)
-	qN, qS := bigIntAsMpn(&q.phi, _LEN)
-	if qS > pS {
-		pN, pS, qN, qS = qN, qS, pN, pS
-	}
 	tmpN, _ := bigIntAsMpn(&tmp.phi, _CAP)
-	mpnMul(tmpN, pN, pS, qN, qS)
+	var tmpS Size
+	if p == q {
+		mpnSqr(tmpN, pN, pS)
+		tmpS = 2 * pS
+	} else {
+		qN, qS := bigIntAsMpn(&q.phi, _LEN)
+		if qS > pS {
+			pN, pS, qN, qS = qN, qS, pN, pS
+		}
+		mpnMul(tmpN, pN, pS, qN, qS)
+		tmpS = pS + qS
+	}
 	tmpBits := tmp.phi.Bits()
-	tmp.phi.SetBits(tmpBits[0 : pS+qS])
+	tmp.phi.SetBits(tmpBits[0 : tmpS])
 	p.phi, tmp.phi = tmp.phi, p.phi
 
 	// Mod p by X^R - 1.
