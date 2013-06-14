@@ -53,3 +53,15 @@ func mpnMul(rp, s1p *Limb, s1n Size, s2p *Limb, s2n Size) {
 		(*C.mp_limb_t)(s2p),
 		C.mp_size_t(s2n))
 }
+
+// Compute the square of {s1p, n} and write the 2*n-limb result to rp.
+//
+// The destination has to have space for 2*n limbs, even if the
+// result's most significant limb is zero. No overlap is permitted
+// between the destination and the source.
+func mpnSqr(rp, s1p *Limb, n Size) {
+	C.mpn_sqr(
+		(*C.mp_limb_t)(rp),
+		(*C.mp_limb_t)(s1p),
+		C.mp_size_t(n))
+}

@@ -44,3 +44,15 @@ func TestMpnMul(t *testing.T) {
 		t.Error(limbs3, expectedLimbs3)
 	}
 }
+
+// mpnSqr() should perform squaring on its operand.
+func TestMpnSqr(t *testing.T) {
+	limbs1 := [3]Limb{1, 2, 3}
+	limbs2 := [6]Limb{}
+
+	mpnSqr(&limbs2[0], &limbs1[0], 3)
+	expectedLimbs2 := [6]Limb{1, 4, 10, 12, 9, 0}
+	if limbs2 != expectedLimbs2 {
+		t.Error(limbs2, expectedLimbs2)
+	}
+}
