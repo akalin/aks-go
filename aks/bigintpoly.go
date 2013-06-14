@@ -125,7 +125,24 @@ func (p *bigIntPoly) Eq(q *bigIntPoly) bool {
 // Sets p to the product of p and q mod (N, X^R - 1). Assumes R >=
 // 2. tmp must not alias p or q.
 func (p *bigIntPoly) mul(q *bigIntPoly, N big.Int, tmp *bigIntPoly) {
-	tmp.phi.Mul(&p.phi, &q.phi)
+	if p.phi.Sign() == 0 {
+		return
+	}
+
+	if q.phi.Sign() == 0 {
+		p.phi.Set(&q.phi)
+		return
+	}
+
+	pN, pS := bigIntAsMpn(&p.phi, _LEN)
+	qN, qS := bigIntAsMpn(&q.phi, _LEN)
+	if qS > pS {
+		pN, pS, qN, qS = qN, qS, pN, pS
+	}
+	tmpN, _ := bigIntAsMpn(&tmp.phi, _CAP)
+	mpnMul(tmpN, pN, pS, qN, qS)
+	tmpBits := tmp.phi.Bits()
+	tmp.phi.SetBits(tmpBits[0 : pS+qS])
 	p.phi, tmp.phi = tmp.phi, p.phi
 
 	// Mod p by X^R - 1.
